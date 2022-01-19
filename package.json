@@ -1,0 +1,41 @@
+{
+  "name": "@nomisma/karbon",
+  "version": "0.0.1",
+  "description": "test project for carbon",
+  "engines": {
+    "node": ">=16",
+    "npm": ">=8"
+  },
+  "scripts": {
+    "test": "node --max-old-space-size=4096 --require ./test/test-global.js ./node_modules/.bin/hardhat test"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@babel/plugin-proposal-class-properties": "^7.5.5",
+    "@openzeppelin/contracts": "^4.4.2",
+    "solc": "0.8.11"
+  },
+  "devDependencies": {
+    "@nomisma/nomisma-smart-contract-helpers": "0.4.0-dev.19",
+    "@babel/core": "7.7.2",
+    "@babel/plugin-transform-modules-commonjs": "7.7.0",
+    "@babel/plugin-transform-runtime": "7.6.2",
+    "@babel/preset-env": "7.7.1",
+    "@babel/register": "7.7.0",
+    "@babel/runtime": "7.7.2",
+    "@nomiclabs/hardhat-truffle5": "^2.0.2",
+    "@nomiclabs/hardhat-web3": "^2.0.0",
+    "@nomisma/eslint-config-shared": "^1.1.0-dev.3",
+    "bn-chai": "git+https://github.com/canufeel/bn-chai.git#feature/should-support",
+    "chai": "^4.1.2",
+    "chai-as-promised": "^7.1.1",
+    "chai-bignumber": "^2.0.2",
+    "eslint": "^5.16.0",
+    "eslint-config-node-strict": "^0.0.2",
+    "eslint-plugin-import": "^2.24.2",
+    "hardhat": "^2.8.2",
+    "solhint": "3.3.2",
+    "solidity-coverage": "0.7.17"
+  }
+}
