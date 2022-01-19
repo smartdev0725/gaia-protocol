@@ -1,0 +1,16 @@
+node_modules/
+coverageEnv/
+coverage/
+.idea/
+
+**/.DS_Store
+
+coverage.json
+
+.coverage_artifacts/
+.coverage_contracts/
+.npmrc
+
+# hardhat
+artifacts/
+cache/
