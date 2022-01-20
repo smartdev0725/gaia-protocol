@@ -9,10 +9,10 @@ require('chai')
   .should();
 
 
-const CO2 = artifacts.require('./CO2.sol');
+const CO2 = artifacts.require('./RheaGeToken.sol');
 
-const name = 'Carbon'; // TODO: figure out the name
-const symbol = 'CO2';
+const name = 'RheaGe'; // TODO: figure out the name
+const symbol = 'RGT';
 
 contract('CO2Token Basic Tests', (addresses) => {
   before(async function () {
