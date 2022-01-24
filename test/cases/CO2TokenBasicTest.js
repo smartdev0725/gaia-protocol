@@ -11,12 +11,12 @@ require('chai')
 
 const CO2 = artifacts.require('./RheaGeToken.sol');
 
-const name = 'RheaGe'; // TODO: figure out the name
-const symbol = 'RGT';
+export const tokenName = 'RheaGe'; // TODO: figure out the name
+export const tokenSymbol = 'RGT';
 
 contract('CO2Token Basic Tests', (addresses) => {
   before(async function () {
-    this.token = await CO2.new(name, symbol);
+    this.token = await CO2.new(tokenName, tokenSymbol);
   });
 
   it('should set initial storage', async function () {
@@ -24,8 +24,8 @@ contract('CO2Token Basic Tests', (addresses) => {
     const symbolFromSc = await this.token.symbol();
     const totalSupply = await this.token.totalSupply();
 
-    assert.equal(nameFromSc, name);
-    assert.equal(symbolFromSc, symbol);
+    assert.equal(nameFromSc, tokenName);
+    assert.equal(symbolFromSc, tokenSymbol);
     assert.equal(totalSupply, '0');
   });
 
