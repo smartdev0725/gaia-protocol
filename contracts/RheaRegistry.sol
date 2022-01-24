@@ -169,4 +169,12 @@ contract RheaRegistry is AccessManager {
 
         emit OffsetAndBurned(tokenOwner, carbonTonAmt);
     }
+
+    function setRheaGeToken(address _rheaGeToken) external {
+        require(
+            _rheaGeToken != address(0),
+            "RheaRegistry::generateBatch: 0x0 address passed as rheaGeTokenAddress"
+        );
+        rheaGeToken = _rheaGeToken;
+    }
 }
