@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.11;
 
-import "./access/AccessManager.sol";
+import "./access/RoleAware.sol";
 import "./token/RheaGeToken.sol";
 
 
-contract RheaRegistry is AccessManager {
+contract RheaRegistry is RoleAware {
     // TODO: which are indexed ??
     event BatchGenerated(
         string serialNumber,
@@ -54,14 +54,18 @@ contract RheaRegistry is AccessManager {
     // TODO: do we need Projects ??
 
     address public rheaGeToken;
-    mapping(string => CCBatch) public ccBatches;
+    mapping(string => CCBatch) public registeredBatches;
+
     mapping(address => uint256) public retiredBalances;
     uint256 public totalSupplyRetired;
 
-    constructor(address _rheaGeToken) public {
-        _setupRole(DEFAULT_ADMIN_ROLE, msg.sender);
+    constructor(
+        address _rheaGeToken,
+        address _roleManager
+    ) public {
         require(_rheaGeToken != address(0), "RheaRegistry: zero address passed as _rheaGeToken");
         rheaGeToken = _rheaGeToken;
+        setRoleManager(_roleManager);
     }
 
     function generateBatch(
@@ -73,9 +77,9 @@ contract RheaRegistry is AccessManager {
         address batchOwner
     // TODO: should we change this to CERTIFIER_ROLE ??
     ) external onlyRole(MINTER_ROLE) {
-        require(!ccBatches[serialNumber].created, "RheaRegistry::generateBatch: Batch already created");
+        require(!registeredBatches[serialNumber].created, "RheaRegistry::generateBatch: Batch already created");
 
-        ccBatches[serialNumber] = CCBatch(
+        registeredBatches[serialNumber] = CCBatch(
             serialNumber,
             projectId,
             vintage,
@@ -106,10 +110,10 @@ contract RheaRegistry is AccessManager {
         uint256 units,
         address batchOwner,
         bool mintTokens
-    ) external onlyRole(OPERATOR_ROLE) {
-        require(ccBatches[serialNumber].created, "RheaRegistry::updateBatch: Batch is empty");
+    ) external onlyRole(MINTER_ROLE) {
+        require(registeredBatches[serialNumber].created, "RheaRegistry::updateBatch: Batch is empty");
 
-        ccBatches[serialNumber] = CCBatch(
+        registeredBatches[serialNumber] = CCBatch(
             serialNumber,
             projectId,
             vintage,
@@ -170,7 +174,7 @@ contract RheaRegistry is AccessManager {
         emit OffsetAndBurned(tokenOwner, carbonTonAmt);
     }
 
-    function setRheaGeToken(address _rheaGeToken) external {
+    function setRheaGeToken(address _rheaGeToken) external onlyRole(GOVERNOR_ROLE) {
         require(
             _rheaGeToken != address(0),
             "RheaRegistry::generateBatch: 0x0 address passed as rheaGeTokenAddress"
