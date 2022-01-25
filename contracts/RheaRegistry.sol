@@ -62,7 +62,7 @@ contract RheaRegistry is RoleAware {
     constructor(
         address _rheaGeToken,
         address _roleManager
-    ) public {
+    ) {
         require(_rheaGeToken != address(0), "RheaRegistry: zero address passed as _rheaGeToken");
         rheaGeToken = _rheaGeToken;
         setRoleManager(_roleManager);
