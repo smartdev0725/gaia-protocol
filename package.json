@@ -1,13 +1,17 @@
 {
-  "name": "@nomisma/karbon",
+  "name": "@nomisma/rhea-ge-protocol",
   "version": "0.0.1",
-  "description": "test project for carbon",
+  "description": "Protocol for Carbon Credit tokenization",
   "engines": {
     "node": ">=16",
     "npm": ">=8"
   },
   "scripts": {
-    "test": "node --max-old-space-size=4096 --require ./test/test-global.js ./node_modules/.bin/hardhat test"
+    "solhint": "node node_modules/.bin/solhint \"contracts/**/*.sol\"",
+    "eslint:tests": "node node_modules/.bin/eslint 'test/**/*.js*'",
+    "lint": "yarn solhint && yarn eslint:tests",
+    "test": "node --max-old-space-size=4096 --require ./test/test-global.js ./node_modules/.bin/hardhat test",
+    "test:coverage": "node --max-old-space-size=8192 --require ./test/test-global.js ./node_modules/.bin/hardhat coverage"
   },
   "author": "",
   "license": "ISC",
@@ -35,7 +39,7 @@
     "eslint-config-node-strict": "^0.0.2",
     "eslint-plugin-import": "^2.24.2",
     "hardhat": "^2.8.2",
-    "solhint": "3.3.2",
+    "solhint": "^3.3.6",
     "solidity-coverage": "0.7.17"
   }
 }
