@@ -133,6 +133,7 @@ contract RheaRegistry is RoleAware {
             msg.sender
         );
 
+        // TODO: should we only mint/burn the difference ??
         if (mintTokens) {
             RheaGeToken(rheaGeToken).mint(address(this), units);
         }
@@ -164,7 +165,6 @@ contract RheaRegistry is RoleAware {
         address tokenOwner,
         uint256 carbonTonAmt
     ) external onlyRole(BURNER_ROLE) {
-        // TODO: need to check if anyone can burn by calling parent contract !!
         RheaGeToken(rheaGeToken).burn(tokenOwner, carbonTonAmt);
         unchecked {
             retiredBalances[tokenOwner] += carbonTonAmt;

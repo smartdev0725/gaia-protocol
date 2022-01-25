@@ -40,4 +40,6 @@ contract('RheaGeToken Basic Tests', ([
     await this.token.transfer(client2, new BigNumber(10), { from: client1 })
       .should.be.rejectedWith('ERC20: transfer amount exceeds balance');
   });
+
+  // TODO: test access and other functionality
 });
