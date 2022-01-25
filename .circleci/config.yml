@@ -1,0 +1,126 @@
+defaults: &defaults
+  docker:
+    - image: circleci/node:16.13.1
+
+commands:
+  setup:
+    steps:
+      - checkout
+      - add_ssh_keys:
+          fingerprints:
+            - "2a:ce:76:7b:c1:f2:22:12:41:77:03:cd:78:00:cf:24"
+      - run:
+          name: setup npmrc
+          command: |
+            mv .circleci/npm/.npmrc .
+      - restore_cache:
+          key: v1-dependency-cache-{{ checksum "yarn.lock" }}
+      - run:
+          name: yarn install
+          command: |
+            yarn install --no-optional --pure-lockfile
+      - save_cache:
+          key: v1-dependency-cache-{{ checksum "yarn.lock" }}
+          paths:
+            - ./node_modules
+
+version: 2.1
+jobs:
+  test-main:
+    <<: *defaults
+    steps:
+      - setup
+      - run:
+          name: yarn lint
+          command: |
+            yarn lint
+      - run:
+           name: yarn coverage
+           command: |
+             yarn test:coverage
+      - run:
+          name: codecov
+          command: |
+            curl https://keybase.io/codecovsecurity/pgp_keys.asc | gpg --import
+            curl -Os https://uploader.codecov.io/v0.1.0_4653/codecov-linux
+            curl -Os https://uploader.codecov.io/v0.1.0_4653/codecov-linux.SHA256SUM
+            curl -Os https://uploader.codecov.io/v0.1.0_4653/codecov-linux.SHA256SUM.sig
+            gpg --verify codecov-linux.SHA256SUM.sig codecov-linux.SHA256SUM
+            shasum -a 256 -c codecov-linux.SHA256SUM
+            chmod +x ./codecov-linux
+            ./codecov-linux -t ${CODECOV_TOKEN} > /dev/null
+
+  release:
+    <<: *defaults
+
+    steps:
+      - checkout
+      - attach_workspace:
+          at: .
+      - restore_cache:
+          key: v1-dependency-cache-{{ checksum "yarn.lock" }}
+
+      - run:
+          name: configure mvn
+          command: |
+            sudo apt-get update
+            sudo apt-get -y upgrade
+            sudo apt-get install -y libasound2-data libasound2
+
+            curl https://nomisma-core-public-assets.s3.eu-west-2.amazonaws.com/jdk-11.0.4_linux-x64_bin.deb -O
+            sudo dpkg -i jdk-11.0.4_linux-x64_bin.deb
+
+            sudo curl -L -o /opt/apache-maven-3.3.9-bin.tar.gz http://www-eu.apache.org/dist/maven/maven-3/3.3.9/binaries/apache-maven-3.3.9-bin.tar.gz
+            sudo tar -xz -C /opt -f /opt/apache-maven-3.3.9-bin.tar.gz
+            sudo rm -f /opt/apache-maven-3.3.9-bin.tar.gz
+            sudo mv /opt/apache-maven-3.3.9 /opt/maven
+
+      - run:
+          name: release
+          command: |
+            export JAVA_HOME=/usr/lib/jvm/jdk-11.0.4
+            export PATH=${PATH}:${JAVA_HOME}/bin
+            export M2_HOME=/opt/maven
+            export MAVEN_HOME=/opt/maven
+            export PATH=${M2_HOME}/bin:${PATH}
+
+            git config user.email "bot@nomisma.one"
+            git config user.name "Nomisma Bot"
+            mkdir -p ${HOME}/.m2
+            mv java/settings.xml ${HOME}/.m2
+            mv .circleci/npm/.npmrc .
+
+            yarn global add semver
+
+            last_version=$(git tag -l | sort -V | tail -1)
+            next_version=$(/home/circleci/.yarn/bin/semver ${last_version} -i prerelease --preid dev)
+
+            sed -i "s/\"version\": \".*\"/\"version\": \"${next_version}\"/" package.json
+            sed -i "s/v0.1.1/v${next_version}/" java/contracts/pom.xml
+
+            yarn mvn
+
+            git tag -a v${next_version} -m ''
+            git push --quiet --tags https://${DEPLOY_GITHUB_TOKEN}@github.com/NomismaTech/${CIRCLE_PROJECT_REPONAME}.git
+
+            npm publish
+
+            cd java/contracts
+            mvn -B -e -Dmaven.wagon.http.pool=false clean deploy
+
+workflows:
+  version: 2.1
+  build-deploy:
+    jobs:
+      - test-main:
+          context: read
+      - test-aux:
+          context: read
+      - release:
+          context: write
+          requires:
+            - test-main
+          filters:
+            branches:
+              only:
+                - development
