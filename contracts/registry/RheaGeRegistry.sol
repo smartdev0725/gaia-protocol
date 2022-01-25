@@ -1,45 +1,12 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.11;
 
-import "./access/RoleAware.sol";
-import "./token/RheaGeToken.sol";
+import "../access/RoleAware.sol";
+import "../token/IRheaGeToken.sol";
+import "./IRheaGeRegistry.sol";
 
 
-contract RheaRegistry is RoleAware {
-    // TODO: which are indexed ??
-    event BatchGenerated(
-        string serialNumber,
-        uint256 projectId,
-        string vintage,
-        string creditType,
-        uint256 units,
-        address indexed batchOwner,
-        address indexed certifier
-    );
-
-    event BatchUpdated(
-        string serialNumber,
-        uint256 projectId,
-        string vintage,
-        string creditType,
-        uint256 units,
-        address indexed batchOwner,
-        address indexed certifier
-    );
-
-    // TODO: do we need operator here and should we keep this name ??
-    event InitialPurchase(
-        address indexed receiver,
-        uint256 amount,
-        address operator
-    );
-
-    // TODO: naming ??
-    event OffsetAndBurned(
-        address indexed holder,
-        uint256 amount
-    );
-
+contract RheaGeRegistry is RoleAware, IRheaGeRegistry {
     // TODO: which fields do we need here ??
     struct CCBatch {
         string serialNumber;
@@ -51,7 +18,7 @@ contract RheaRegistry is RoleAware {
         bool created;
     }
 
-    // TODO: do we need Projects ??
+    // TODO: do we need to store Projects ??
 
     address public rheaGeToken;
     mapping(string => CCBatch) public registeredBatches;
@@ -76,7 +43,7 @@ contract RheaRegistry is RoleAware {
         uint256 units,
         address batchOwner
     // TODO: should we change this to CERTIFIER_ROLE ??
-    ) external onlyRole(MINTER_ROLE) {
+    ) external override onlyRole(MINTER_ROLE) {
         require(!registeredBatches[serialNumber].created, "RheaRegistry::generateBatch: Batch already created");
 
         registeredBatches[serialNumber] = CCBatch(
@@ -99,7 +66,7 @@ contract RheaRegistry is RoleAware {
             msg.sender
         );
 
-        RheaGeToken(rheaGeToken).mint(address(this), units);
+        IRheaGeToken(rheaGeToken).mint(address(this), units);
     }
 
     function updateBatch(
@@ -110,7 +77,7 @@ contract RheaRegistry is RoleAware {
         uint256 units,
         address batchOwner,
         bool mintTokens
-    ) external onlyRole(MINTER_ROLE) {
+    ) external override onlyRole(MINTER_ROLE) {
         require(registeredBatches[serialNumber].created, "RheaRegistry::updateBatch: Batch is empty");
 
         registeredBatches[serialNumber] = CCBatch(
@@ -135,18 +102,19 @@ contract RheaRegistry is RoleAware {
 
         // TODO: should we only mint/burn the difference ??
         if (mintTokens) {
-            RheaGeToken(rheaGeToken).mint(address(this), units);
+            IRheaGeToken(rheaGeToken).mint(address(this), units);
         }
     }
 
     function transferTokens(
         address to,
         uint256 amount
-    ) external onlyRole(OPERATOR_ROLE) {
+    ) external override onlyRole(OPERATOR_ROLE) {
         require(to != address(0), "RheaRegistry::transferTokens: Transferring to a 0x0 address.");
 
+        // TODO: do we even need this chekc of the function at all ??
         require(
-            RheaGeToken(rheaGeToken).balanceOf(address(this)) >= amount,
+            IRheaGeToken(rheaGeToken).balanceOf(address(this)) >= amount,
             "RheaRegistry::transferTokens: Unsufficient amount of tokens on Registry"
         );
 
@@ -154,7 +122,7 @@ contract RheaRegistry is RoleAware {
         // TODO: what other logic do we need here ??
 
         require(
-            RheaGeToken(rheaGeToken).transfer(to, amount),
+            IRheaGeToken(rheaGeToken).transfer(to, amount),
             "RheaRegistry::transferTokens: RheaGeToken::transfer failed"
         );
 
@@ -164,8 +132,8 @@ contract RheaRegistry is RoleAware {
     function offset(
         address tokenOwner,
         uint256 carbonTonAmt
-    ) external onlyRole(BURNER_ROLE) {
-        RheaGeToken(rheaGeToken).burn(tokenOwner, carbonTonAmt);
+    ) external override onlyRole(BURNER_ROLE) {
+        IRheaGeToken(rheaGeToken).burn(tokenOwner, carbonTonAmt);
         unchecked {
             retiredBalances[tokenOwner] += carbonTonAmt;
             totalSupplyRetired += carbonTonAmt;
@@ -174,7 +142,7 @@ contract RheaRegistry is RoleAware {
         emit OffsetAndBurned(tokenOwner, carbonTonAmt);
     }
 
-    function setRheaGeToken(address _rheaGeToken) external onlyRole(GOVERNOR_ROLE) {
+    function setRheaGeToken(address _rheaGeToken) external override onlyRole(GOVERNOR_ROLE) {
         require(
             _rheaGeToken != address(0),
             "RheaRegistry::generateBatch: 0x0 address passed as rheaGeTokenAddress"

@@ -13,7 +13,7 @@ require('chai')
 
 
 const RheaGe = artifacts.require('./RheaGeToken.sol');
-const Registry = artifacts.require('./RheaRegistry.sol');
+const Registry = artifacts.require('./RheaGeRegistry.sol');
 const RoleManager = artifacts.require('./RoleManager.sol');
 
 const {
