@@ -9,14 +9,21 @@ require('chai')
   .should();
 
 
-const CO2 = artifacts.require('./RheaGeToken.sol');
+const RheaGe = artifacts.require('./RheaGeToken.sol');
+const RoleManager = artifacts.require('./RoleManager.sol');
 
 export const tokenName = 'RheaGe'; // TODO: figure out the name
 export const tokenSymbol = 'RGT';
 
-contract('CO2Token Basic Tests', (addresses) => {
+
+contract('RheaGeToken Basic Tests', ([
+  governor,
+  client1,
+  client2,
+]) => {
   before(async function () {
-    this.token = await CO2.new(tokenName, tokenSymbol);
+    const roleManager = await RoleManager.new([ governor ], 1);
+    this.token = await RheaGe.new(tokenName, tokenSymbol, roleManager.address);
   });
 
   it('should set initial storage', async function () {
@@ -30,7 +37,6 @@ contract('CO2Token Basic Tests', (addresses) => {
   });
 
   it('should NOT transfer before minting', async function () {
-    const [ client1, client2 ] = addresses;
     await this.token.transfer(client2, new BigNumber(10), { from: client1 })
       .should.be.rejectedWith('ERC20: transfer amount exceeds balance');
   });
