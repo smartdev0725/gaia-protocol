@@ -73,16 +73,7 @@ contract('RheaRegistry Test', ([
       ],
       { from: governor }
     );
-
-    // TODO: rework Access and Role Management
-    // await this.registry.grantRole(MINTER_ROLE, minter, { from: governor });
-    // await this.token.grantRole(MINTER_ROLE, this.registry.address, { from: governor });
-    // await this.registry.grantRole(OPERATOR_ROLE, governor, { from: governor });
-    // await this.registry.grantRole(BURNER_ROLE, governor, { from: governor });
-    // await this.token.grantRole(BURNER_ROLE, this.registry.address, { from: governor });
   });
-
-  // TODO: describe('ACCESS');
 
   describe('#generateBatch()', () => {
     it('should generate new batch and mint the correct amount of tokens', async function () {
@@ -94,8 +85,27 @@ contract('RheaRegistry Test', ([
         { from: minter }
       ).should.be.fulfilled;
 
+      const {
+        serialNumber: serialNumberSC,
+        projectId: projectIdSC,
+        vintage: vintageSC,
+        creditType: cresitTypeSC,
+        units: unitsSC,
+        owner: ownerSC,
+        created,
+      } = await this.registry.registeredBatches(batchDataBase.serialNumber);
+
+      serialNumberSC.should.be.equal(batchDataBase.serialNumber);
+      projectIdSC.should.be.bignumber.equal(batchDataBase.projectId);
+      vintageSC.should.be.equal(batchDataBase.vintage);
+      cresitTypeSC.should.be.equal(batchDataBase.creditType);
+      unitsSC.should.be.bignumber.equal(batchDataBase.units);
+      ownerSC.should.be.equal(batchDataBase.batchOwner);
+      created.should.be.equal(true);
+
       const registryBalAfter = await this.token.balanceOf(this.registry.address);
       registryBalAfter.sub(registryBalBefore).should.be.bignumber.equal(batchDataBase.units);
+      registryBalAfter.sub(registryBalBefore).should.be.bignumber.equal(unitsSC);
     });
 
     it('should should NOT generate the same batch twice', async function () {
@@ -113,6 +123,120 @@ contract('RheaRegistry Test', ([
         ...Object.values(newBatch),
         { from: minter }
       ).should.be.rejectedWith('RheaRegistry::generateBatch: Batch already created');
+    });
+  });
+
+  describe('#updateBatch()', () => {
+    // TODO: check the todo in the updateBatch() regarding minting
+    it('should update existing batch and mint tokens', async function () {
+      const initialBatch = {
+        ...batchDataBase,
+        serialNumber: '7777',
+      };
+
+      await this.registry.generateBatch(
+        ...Object.values(initialBatch),
+        { from: minter }
+      );
+
+      const updatedBatch = {
+        ...initialBatch,
+        creditType: 'creditTypeUpdated',
+        units: new BigNumber(150),
+      };
+      const mintTokens = true;
+
+      const registryBalBefore = await this.token.balanceOf(this.registry.address);
+
+      await this.registry.updateBatch(
+        ...Object.values(updatedBatch),
+        mintTokens,
+        { from: minter }
+      ).should.be.fulfilled;
+
+      const {
+        serialNumber: serialNumberSC,
+        projectId: projectIdSC,
+        vintage: vintageSC,
+        creditType: cresitTypeSC,
+        units: unitsSC,
+        owner: ownerSC,
+        created,
+      } = await this.registry.registeredBatches(initialBatch.serialNumber);
+
+      const registryBalAfter = await this.token.balanceOf(this.registry.address);
+
+      serialNumberSC.should.be.equal(initialBatch.serialNumber);
+      projectIdSC.should.be.bignumber.equal(initialBatch.projectId);
+      vintageSC.should.be.equal(initialBatch.vintage);
+      cresitTypeSC.should.be.equal(updatedBatch.creditType);
+      unitsSC.should.be.bignumber.equal(updatedBatch.units);
+      ownerSC.should.be.equal(updatedBatch.batchOwner);
+      created.should.be.equal(true);
+
+      registryBalAfter.sub(registryBalBefore).should.be.bignumber.equal(updatedBatch.units);
+    });
+
+    it('should update existing batch and NOT mint tokens', async function () {
+      const initialBatch = {
+        ...batchDataBase,
+        serialNumber: '777',
+      };
+
+      await this.registry.generateBatch(
+        ...Object.values(initialBatch),
+        { from: minter }
+      );
+
+      const updatedBatch = {
+        ...initialBatch,
+        creditType: 'creditTypeUpdated',
+        batchOwner: operator,
+      };
+      const mintTokens = false;
+
+      const registryBalBefore = await this.token.balanceOf(this.registry.address);
+
+      await this.registry.updateBatch(
+        ...Object.values(updatedBatch),
+        mintTokens,
+        { from: minter }
+      ).should.be.fulfilled;
+
+      const {
+        serialNumber: serialNumberSC,
+        projectId: projectIdSC,
+        vintage: vintageSC,
+        creditType: cresitTypeSC,
+        units: unitsSC,
+        owner: ownerSC,
+        created,
+      } = await this.registry.registeredBatches(initialBatch.serialNumber);
+
+      const registryBalAfter = await this.token.balanceOf(this.registry.address);
+
+      serialNumberSC.should.be.equal(initialBatch.serialNumber);
+      projectIdSC.should.be.bignumber.equal(initialBatch.projectId);
+      vintageSC.should.be.equal(initialBatch.vintage);
+      cresitTypeSC.should.be.equal(updatedBatch.creditType);
+      unitsSC.should.be.bignumber.equal(initialBatch.units);
+      ownerSC.should.be.equal(updatedBatch.batchOwner);
+      created.should.be.equal(true);
+
+      registryBalAfter.should.be.bignumber.equal(registryBalBefore);
+    });
+
+    it('should NOT update a batch that was not registered', async function () {
+      const newBatch = {
+        ...batchDataBase,
+        serialNumber: 'asdasda',
+      };
+
+      await this.registry.updateBatch(
+        ...Object.values(newBatch),
+        false,
+        { from: minter }
+      ).should.be.rejectedWith('RheaRegistry::updateBatch: Batch is empty');
     });
   });
 
@@ -189,6 +313,10 @@ contract('RheaRegistry Test', ([
       offsetterBalanceAfter.should.be.bignumber.equal(tokenAmtBought.sub(tokenAmtOffset));
     });
   });
+
+  // TODO: describe('ACCESS', () => {}); test access to each function
+
+  // TODO: describe('Events', () => {}); test all event on Registry
 
   it('should set new rheaGeToken address', async function () {
     const previousTokenAddress = await this.registry.rheaGeToken();
