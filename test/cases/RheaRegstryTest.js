@@ -240,7 +240,7 @@ contract('RheaRegistry Test', ([
     });
   });
 
-  describe('#transferTokens()', () => {
+  describe('#purchase()', () => {
     it('should transfer minted tokens to 2 different clients', async function () {
       const newBatch = {
         ...batchDataBase,
@@ -258,8 +258,8 @@ contract('RheaRegistry Test', ([
       const client1BalanceBefore = await this.token.balanceOf(buyer1);
       const client2BalanceBefore = await this.token.balanceOf(buyer2);
 
-      await this.registry.transferTokens(buyer1, tokenAmt1, { from: operator }).should.be.fulfilled;
-      await this.registry.transferTokens(buyer2, tokenAmt2, { from: operator }).should.be.fulfilled;
+      await this.registry.purchase(buyer1, tokenAmt1, { from: operator }).should.be.fulfilled;
+      await this.registry.purchase(buyer2, tokenAmt2, { from: operator }).should.be.fulfilled;
 
       const client1BalanceAfter = await this.token.balanceOf(buyer1);
       const client2BalanceAfter = await this.token.balanceOf(buyer2);
@@ -282,8 +282,8 @@ contract('RheaRegistry Test', ([
         { from: minter }
       ).should.be.fulfilled;
 
-      await this.registry.transferTokens(buyer1, transferAmt, { from: operator })
-        .should.be.rejectedWith('RheaRegistry::transferTokens: Unsufficient amount of tokens on Registry');
+      await this.registry.purchase(buyer1, transferAmt, { from: operator })
+        .should.be.rejectedWith('RheaRegistry::purchase: Unsufficient amount of tokens on Registry');
     });
   });
 
@@ -301,7 +301,7 @@ contract('RheaRegistry Test', ([
         { from: minter }
       ).should.be.fulfilled;
 
-      await this.registry.transferTokens(offsetter1, tokenAmtBought, { from: operator });
+      await this.registry.purchase(offsetter1, tokenAmtBought, { from: operator });
 
       const offsetterBalanceBefore = await this.token.balanceOf(offsetter1);
 
