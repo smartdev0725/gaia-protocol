@@ -21,18 +21,22 @@ contract RheaGeRegistry is RoleAware, IRheaGeRegistry {
     // TODO: do we need to store Projects ??
 
     address public rheaGeToken;
-    mapping(string => CCBatch) public registeredBatches;
+    address public paymentManager;
 
+    mapping(string => CCBatch) public registeredBatches;
     mapping(address => uint256) public retiredBalances;
     uint256 public totalSupplyRetired;
 
     constructor(
         address _rheaGeToken,
-        address _roleManager
+        address _roleManager,
+        address _paymentManager
     ) {
         require(_rheaGeToken != address(0), "RheaRegistry: zero address passed as _rheaGeToken");
+        require(_paymentManager != address(0), "RheaRegistry: zero address passed as _paymentManager");
         rheaGeToken = _rheaGeToken;
         setRoleManager(_roleManager);
+        paymentManager = _paymentManager;
     }
 
     function generateBatch(
@@ -42,7 +46,6 @@ contract RheaGeRegistry is RoleAware, IRheaGeRegistry {
         string calldata creditType,
         uint256 units,
         address batchOwner
-    // TODO: should we change this to CERTIFIER_ROLE ??
     ) external override onlyRole(MINTER_ROLE) {
         require(!registeredBatches[serialNumber].created, "RheaRegistry::generateBatch: Batch already created");
 
@@ -69,64 +72,22 @@ contract RheaGeRegistry is RoleAware, IRheaGeRegistry {
         IRheaGeToken(rheaGeToken).mint(address(this), units);
     }
 
-    function updateBatch(
-        string calldata serialNumber,
-        uint256 projectId,
-        string calldata vintage,
-        string calldata creditType,
-        uint256 units,
-        address batchOwner,
-        bool mintTokens
-    ) external override onlyRole(MINTER_ROLE) {
-        require(registeredBatches[serialNumber].created, "RheaRegistry::updateBatch: Batch is empty");
-
-        registeredBatches[serialNumber] = CCBatch(
-            serialNumber,
-            projectId,
-            vintage,
-            creditType,
-            units,
-            batchOwner,
-            true
-        );
-
-        emit BatchUpdated(
-            serialNumber,
-            projectId,
-            vintage,
-            creditType,
-            units,
-            batchOwner,
-            msg.sender
-        );
-
-        // TODO: should we only mint/burn the difference ??
-        if (mintTokens) {
-            IRheaGeToken(rheaGeToken).mint(address(this), units);
-        }
-    }
-
-    function transferTokens(
-        address to,
-        uint256 amount
+    // TODO: write and test different flows with different currencies for client payments !!!
+    function purchase(
+        address buyer,
+        address paymentToken,
+        uint256 toPay,
+        uint256 toReceive
     ) external override onlyRole(OPERATOR_ROLE) {
-        require(to != address(0), "RheaRegistry::transferTokens: Transferring to a 0x0 address.");
-
-        // TODO: do we even need this chekc of the function at all ??
-        require(
-            IRheaGeToken(rheaGeToken).balanceOf(address(this)) >= amount,
-            "RheaRegistry::transferTokens: Unsufficient amount of tokens on Registry"
-        );
-
         // TODO: what other checks do we need ??
         // TODO: what other logic do we need here ??
 
         require(
-            IRheaGeToken(rheaGeToken).transfer(to, amount),
-            "RheaRegistry::transferTokens: RheaGeToken::transfer failed"
+            IRheaGeToken(rheaGeToken).transfer(buyer, amount),
+            "RheaRegistry::purchase: RheaGeToken::transfer failed"
         );
 
-        emit InitialPurchase(to, amount, msg.sender);
+        emit InitialPurchase(buyer, amount, msg.sender);
     }
 
     function offset(

@@ -46,17 +46,7 @@ interface IRheaGeRegistry {
         address batchOwner
     ) external;
 
-    function updateBatch(
-        string calldata serialNumber,
-        uint256 projectId,
-        string calldata vintage,
-        string calldata creditType,
-        uint256 units,
-        address batchOwner,
-        bool mintTokens
-    ) external;
-
-    function transferTokens(
+    function purchase(
         address to,
         uint256 amount
     ) external;

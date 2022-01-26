@@ -14,6 +14,7 @@ contract RoleAware {
     /**
      * @dev > Important: these have to match with the ones on RoleManager.sol
     */
+    // TODO: which of these roles we need ??
     bytes32 public constant GOVERNOR_ROLE = "GOVERNOR_ROLE";
     bytes32 public constant MINTER_ROLE = "MINTER_ROLE";
     bytes32 public constant BURNER_ROLE = "BURNER_ROLE";
