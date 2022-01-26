@@ -4,6 +4,7 @@ pragma solidity ^0.8.11;
 import "../access/RoleAware.sol";
 import "../token/IRheaGeToken.sol";
 import "./IRheaGeRegistry.sol";
+import "../tokens/manage/IPaymentManager.sol";
 
 
 contract RheaGeRegistry is RoleAware, IRheaGeRegistry {
@@ -26,6 +27,11 @@ contract RheaGeRegistry is RoleAware, IRheaGeRegistry {
     mapping(string => CCBatch) public registeredBatches;
     mapping(address => uint256) public retiredBalances;
     uint256 public totalSupplyRetired;
+
+    // TODO: do we need this to be able to transfer payment tokens from this SC
+    //  or can we just use balanceOf() for each token ???
+    // tokenAddress => totalAmount
+    mapping(address => uint256) internal paymentBalances;
 
     constructor(
         address _rheaGeToken,
@@ -76,11 +82,20 @@ contract RheaGeRegistry is RoleAware, IRheaGeRegistry {
     function purchase(
         address buyer,
         address paymentToken,
-        uint256 toPay,
-        uint256 toReceive
+        uint256 paymentAmt,
+        uint256 rgtAmt
     ) external override onlyRole(OPERATOR_ROLE) {
         // TODO: what other checks do we need ??
         // TODO: what other logic do we need here ??
+        IPaymentManager(paymentManager).collectPayment(
+            buyer,
+            address(this),
+            paymentToken,
+            paymentAmt
+        );
+
+        // TODO: might not need this...
+        paymentBalances[paymentToken] = paymentAmt;
 
         require(
             IRheaGeToken(rheaGeToken).transfer(buyer, amount),
