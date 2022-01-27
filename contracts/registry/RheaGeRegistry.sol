@@ -1,13 +1,16 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.11;
 
+import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "../access/RoleAware.sol";
-import "../token/IRheaGeToken.sol";
+import "../tokens/rgt/IRheaGeToken.sol";
 import "./IRheaGeRegistry.sol";
 import "../tokens/manage/IPaymentManager.sol";
 
 
 contract RheaGeRegistry is RoleAware, IRheaGeRegistry {
+    using SafeERC20 for IERC20;
+
     // TODO: which fields do we need here ??
     struct CCBatch {
         string serialNumber;
@@ -79,30 +82,32 @@ contract RheaGeRegistry is RoleAware, IRheaGeRegistry {
     }
 
     // TODO: write and test different flows with different currencies for client payments !!!
+    // TODO: who calls this function? who is msg.sender ?? how should we guard it if at all ??
     function purchase(
         address buyer,
         address paymentToken,
         uint256 paymentAmt,
         uint256 rgtAmt
-    ) external override onlyRole(OPERATOR_ROLE) {
+    ) external payable override onlyRole(OPERATOR_ROLE) {
         // TODO: what other checks do we need ??
         // TODO: what other logic do we need here ??
         IPaymentManager(paymentManager).collectPayment(
             buyer,
             address(this),
             paymentToken,
-            paymentAmt
+            paymentAmt,
+            msg.value
         );
 
-        // TODO: might not need this...
+        // TODO: might not need this... test situations to figure out
         paymentBalances[paymentToken] = paymentAmt;
 
         require(
-            IRheaGeToken(rheaGeToken).transfer(buyer, amount),
+            IRheaGeToken(rheaGeToken).transfer(buyer, rgtAmt),
             "RheaRegistry::purchase: RheaGeToken::transfer failed"
         );
 
-        emit InitialPurchase(buyer, amount, msg.sender);
+        emit InitialPurchase(buyer, rgtAmt, msg.sender);
     }
 
     function offset(
@@ -116,6 +121,15 @@ contract RheaGeRegistry is RoleAware, IRheaGeRegistry {
         }
 
         emit OffsetAndBurned(tokenOwner, carbonTonAmt);
+    }
+
+    // TODO: test this and make sure we can withdraw all ERC20 and ETH payments
+    function withdrawPaymentTokens(
+        address to,
+        address token,
+        uint256 amount
+    ) external override onlyRole(GOVERNOR_ROLE) {
+        IERC20(token).safeTransfer(to, amount);
     }
 
     function setRheaGeToken(address _rheaGeToken) external override onlyRole(GOVERNOR_ROLE) {

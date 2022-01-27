@@ -26,7 +26,7 @@ interface IRheaGeRegistry {
 
     // TODO: do we need operator here and should we keep this name ??
     event InitialPurchase(
-        address indexed receiver,
+        address indexed buyer,
         uint256 amount,
         address operator
     );
@@ -47,9 +47,11 @@ interface IRheaGeRegistry {
     ) external;
 
     function purchase(
-        address to,
-        uint256 amount
-    ) external;
+        address buyer,
+        address paymentToken,
+        uint256 paymentAmt,
+        uint256 rgtAmt
+    ) external payable;
 
     function offset(
         address tokenOwner,
@@ -57,4 +59,10 @@ interface IRheaGeRegistry {
     ) external;
 
     function setRheaGeToken(address _rheaGeToken) external;
+
+    function withdrawPaymentTokens(
+        address to,
+        address token,
+        uint256 amount
+    ) external;
 }

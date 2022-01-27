@@ -26,7 +26,7 @@ contract PaymentManager is RoleAware, IPaymentManager {
         address _etherAddress
     ) {
         require(_etherAddress != address(0), "PaymentManager:: _etherAddress is 0x0");
-        setRoleManager(roleManager);
+        setRoleManager(_roleManager);
         etherAddress = _etherAddress;
     }
 
@@ -36,7 +36,7 @@ contract PaymentManager is RoleAware, IPaymentManager {
 
     function addTokensToWhitelist(
         address[] memory tokens
-    ) external onlyRole(GOVENOR_ROLE) {
+    ) external onlyRole(GOVERNOR_ROLE) {
         for (uint256 i = 0; i < tokens.length; i++) {
             require(tokens[i] != address(0), "Whitelisted token address is zero");
             if (!whitelistedTokens[tokens[i]]) {
@@ -48,7 +48,7 @@ contract PaymentManager is RoleAware, IPaymentManager {
         }
     }
 
-    function removeTokenFromWhitelist(address token) external onlyRole(GOVENOR_ROLE) {
+    function removeTokenFromWhitelist(address token) external onlyRole(GOVERNOR_ROLE) {
         require(token != address(0), "Whitelisted token address is not set");
         require(whitelistedTokens[token], "Can not remove token that is not in the whitelist");
         whitelistedTokens[token] = false;
@@ -56,25 +56,28 @@ contract PaymentManager is RoleAware, IPaymentManager {
     }
 
     // TODO: should we make a better guard or none at all ??
+    // TODO: this function should probably be in Registry
     function collectPayment(
         address from,
         address to,
         address tokenAddress,
-        uint256 amount
+        uint256 amount,
+    // TODO: can we make this better without passing msg.value here ??
+        uint256 msgValue
     ) external onlyRole(OPERATOR_ROLE) {
-        bool isEther = tokenAddress == etherAddress();
-        uint256 paymentAmt = isEther ? msg.value : amount;
+        bool isEther = tokenAddress == etherAddress;
+        uint256 paymentAmt = isEther ? msgValue : amount;
         require(paymentAmt != 0, "PaymentManager::collectPayment: no payment provided");
         validateToken(tokenAddress);
 
         if (isEther) {
             require(
-                msg.value == amount,
+                msgValue == amount,
                 "PaymentManager::collectPayment: incorrect amount has been passed with ETH purchase"
             );
         } else {
             require(
-                msg.value == 0,
+                msgValue == 0,
                 "PaymentManager::collectPayment: ETH has been sent with an ERC20 purchase"
             );
             IERC20(tokenAddress).safeTransferFrom(from, to, paymentAmt);

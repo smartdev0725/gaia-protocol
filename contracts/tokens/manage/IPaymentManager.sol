@@ -10,8 +10,7 @@ interface IPaymentManager {
     function validateToken(address token) external view;
 
     function addTokensToWhitelist(
-        address[] memory tokens,
-        uint256[] memory precisions
+        address[] memory tokens
     ) external;
 
     function removeTokenFromWhitelist(address token) external;
@@ -20,6 +19,7 @@ interface IPaymentManager {
         address from,
         address to,
         address tokenAddress,
-        uint256 amount
+        uint256 amount,
+        uint256 msgValue
     ) external;
 }
