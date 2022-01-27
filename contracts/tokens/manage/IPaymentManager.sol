@@ -22,4 +22,6 @@ interface IPaymentManager {
         uint256 amount,
         uint256 msgValue
     ) external;
+
+    function setEtherAddress(address _etherAddress) external;
 }

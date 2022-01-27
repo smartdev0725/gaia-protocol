@@ -31,14 +31,14 @@ contract PaymentManager is RoleAware, IPaymentManager {
     }
 
     function validateToken(address token) public view {
-        require(whitelistedTokens[token], "Token is not whitelisted");
+        require(whitelistedTokens[token], "PaymentManager::validateToken: Token is not whitelisted");
     }
 
     function addTokensToWhitelist(
         address[] memory tokens
     ) external onlyRole(GOVERNOR_ROLE) {
         for (uint256 i = 0; i < tokens.length; i++) {
-            require(tokens[i] != address(0), "Whitelisted token address is zero");
+            require(tokens[i] != address(0), "PaymentManager::addTokensToWhitelist: Whitelisted token address is zero");
             if (!whitelistedTokens[tokens[i]]) {
                 whitelistedTokens[tokens[i]] = true;
                 emit TokenWhitelisted(
@@ -49,8 +49,8 @@ contract PaymentManager is RoleAware, IPaymentManager {
     }
 
     function removeTokenFromWhitelist(address token) external onlyRole(GOVERNOR_ROLE) {
-        require(token != address(0), "Whitelisted token address is not set");
-        require(whitelistedTokens[token], "Can not remove token that is not in the whitelist");
+        require(token != address(0), "PaymentManager::removeTokenFromWhitelist: Whitelisted token address is not set");
+        require(whitelistedTokens[token], "PaymentManager::removeTokenFromWhitelist: Can not remove token that is not in the whitelist");
         whitelistedTokens[token] = false;
         emit TokenRemovedFromWhitelist(token);
     }
@@ -82,5 +82,10 @@ contract PaymentManager is RoleAware, IPaymentManager {
             );
             IERC20(tokenAddress).safeTransferFrom(from, to, paymentAmt);
         }
+    }
+
+    function setEtherAddress(address _etherAddress) external override onlyRole(GOVERNOR_ROLE) {
+        require(_etherAddress != address(0), "PaymentManager::setEtherAddress: _etherAddress is 0x0");
+        etherAddress = _etherAddress;
     }
 }
