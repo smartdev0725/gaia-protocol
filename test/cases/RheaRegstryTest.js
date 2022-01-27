@@ -195,7 +195,7 @@ contract('RheaRegistry Test', ([
 
     it('should NOT transfer more ERC20 than was minted', async function () {
       const rgAmount = new BigNumber(1000000000);
-      const payAmt = new BigNumber(15000);
+      const payAmt = new BigNumber(15);
 
       await this.payToken.approve(this.payManager.address, payAmt, { from: buyer1 });
 
