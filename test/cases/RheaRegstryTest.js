@@ -72,7 +72,6 @@ contract('RheaRegistry Test', ([
         this.registry.address,
         operator,
         this.registry.address,
-        burner,
         this.registry.address,
       ],
       [
@@ -80,7 +79,6 @@ contract('RheaRegistry Test', ([
         MINTER_ROLE,
         OPERATOR_ROLE,
         OPERATOR_ROLE,
-        BURNER_ROLE,
         BURNER_ROLE,
       ],
       { from: governor }
@@ -215,7 +213,8 @@ contract('RheaRegistry Test', ([
   });
 
   describe('#offset()', async () => {
-    it('should offset, burn the correct amount of tokens and change clients balance appropriately', async function () {
+    // eslint-disable-next-line max-len
+    it('should offset, burn the correct amount of tokens and change clients balance appropriately when called by any client', async function () {
       const newBatch = {
         ...batchDataBase,
         serialNumber: '3331233',
@@ -236,7 +235,7 @@ contract('RheaRegistry Test', ([
 
       const offsetterBalanceBefore = await this.rheaGe.balanceOf(offsetter1);
 
-      await this.registry.offset(offsetter1, tokenAmtOffset, { from: burner }).should.be.fulfilled;
+      await this.registry.offset(tokenAmtOffset, { from: offsetter1 }).should.be.fulfilled;
 
       const offsetterBalanceAfter = await this.rheaGe.balanceOf(offsetter1);
 

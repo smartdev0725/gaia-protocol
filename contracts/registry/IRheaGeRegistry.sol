@@ -54,7 +54,6 @@ interface IRheaGeRegistry {
     ) external payable;
 
     function offset(
-        address tokenOwner,
         uint256 carbonTonAmt
     ) external;
 

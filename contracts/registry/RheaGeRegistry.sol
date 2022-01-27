@@ -111,16 +111,15 @@ contract RheaGeRegistry is RoleAware, IRheaGeRegistry {
     }
 
     function offset(
-        address tokenOwner,
         uint256 carbonTonAmt
-    ) external override onlyRole(BURNER_ROLE) {
-        IRheaGeToken(rheaGeToken).burn(tokenOwner, carbonTonAmt);
+    ) external override {
+        IRheaGeToken(rheaGeToken).burn(msg.sender, carbonTonAmt);
         unchecked {
-            retiredBalances[tokenOwner] += carbonTonAmt;
+            retiredBalances[msg.sender] += carbonTonAmt;
             totalSupplyRetired += carbonTonAmt;
         }
 
-        emit OffsetAndBurned(tokenOwner, carbonTonAmt);
+        emit OffsetAndBurned(msg.sender, carbonTonAmt);
     }
 
     // TODO: test this and make sure we can withdraw all ERC20 and ETH payments
