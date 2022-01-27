@@ -41,7 +41,7 @@ contract('RheaRegistry Test', ([
     projectId: new BigNumber(777),
     vintage: 'vintage', // TODO: what should this look like ??
     creditType: 'creditType', // TODO: what should this look like ??
-    units: new BigNumber(123),
+    units: new BigNumber(10000),
     batchOwner,
   };
 
@@ -331,12 +331,14 @@ contract('RheaRegistry Test', ([
         ...batchDataBase,
         serialNumber: '3331233',
       };
-      const tokenAmtBought = new BigNumber(35);
-      const tokenAmtOffset = new BigNumber(7);
-      const payAmt = new BigNumber(15000);
+      const tokenAmtBought = new BigNumber(350);
+      const tokenAmtOffset1 = new BigNumber(7);
+      const tokenAmtOffset2 = new BigNumber(179);
+      const payAmt = new BigNumber(50);
 
       await this.payToken.transfer(offsetter1, payAmt, { from: buyer1 });
       await this.payToken.approve(this.payManager.address, payAmt, { from: offsetter1 });
+      await this.payToken.approve(this.payManager.address, payAmt, { from: buyer1 });
 
       await this.registry.generateBatch(
         ...Object.values(newBatch),
@@ -344,15 +346,27 @@ contract('RheaRegistry Test', ([
       ).should.be.fulfilled;
 
       await this.registry.purchase(offsetter1, this.payToken.address, payAmt, tokenAmtBought, { from: operator });
+      await this.registry.purchase(buyer1, this.payToken.address, payAmt, tokenAmtBought, { from: operator });
 
       const offsetterBalanceBefore = await this.rheaGe.balanceOf(offsetter1);
 
-      await this.registry.offset(tokenAmtOffset, { from: offsetter1 }).should.be.fulfilled;
+      await this.registry.offset(tokenAmtOffset1, { from: offsetter1 }).should.be.fulfilled;
+
+      // for checking proper storage updates
+      await this.registry.offset(tokenAmtOffset2, { from: buyer1 }).should.be.fulfilled;
 
       const offsetterBalanceAfter = await this.rheaGe.balanceOf(offsetter1);
 
-      offsetterBalanceBefore.sub(offsetterBalanceAfter).should.be.bignumber.equal(tokenAmtOffset);
-      offsetterBalanceAfter.should.be.bignumber.equal(tokenAmtBought.sub(tokenAmtOffset));
+      offsetterBalanceBefore.sub(offsetterBalanceAfter).should.be.bignumber.equal(tokenAmtOffset1);
+      offsetterBalanceAfter.should.be.bignumber.equal(tokenAmtBought.sub(tokenAmtOffset1));
+
+      const retiredBalanceClient1 = await this.registry.retiredBalances(offsetter1);
+      const retiredBalanceClient2 = await this.registry.retiredBalances(buyer1);
+      const totalSupplyRetired = await this.registry.totalSupplyRetired();
+
+      retiredBalanceClient1.should.be.bignumber.equal(tokenAmtOffset1);
+      retiredBalanceClient2.should.be.bignumber.equal(tokenAmtOffset2);
+      totalSupplyRetired.should.be.bignumber.equal(tokenAmtOffset1.add(tokenAmtOffset2));
     });
   });
 
