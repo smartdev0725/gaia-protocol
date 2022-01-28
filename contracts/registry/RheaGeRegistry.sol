@@ -31,11 +31,6 @@ contract RheaGeRegistry is RoleAware, IRheaGeRegistry {
     mapping(address => uint256) public retiredBalances;
     uint256 public totalSupplyRetired;
 
-    // TODO: do we need this to be able to transfer payment tokens from this SC
-    //  or can we just use balanceOf() for each token ???
-    // tokenAddress => totalAmount
-    mapping(address => uint256) internal paymentBalances;
-
     constructor(
         address _rheaGeToken,
         address _roleManager,
@@ -81,7 +76,6 @@ contract RheaGeRegistry is RoleAware, IRheaGeRegistry {
         IRheaGeToken(rheaGeToken).mint(address(this), units);
     }
 
-    // TODO: write and test different flows with different currencies for client payments !!!
     // TODO: who calls this function? who is msg.sender ?? how should we guard it if at all ??
     function purchase(
         address buyer,
@@ -98,9 +92,6 @@ contract RheaGeRegistry is RoleAware, IRheaGeRegistry {
             paymentAmt,
             msg.value
         );
-
-        // TODO: might not need this... test situations to figure out
-        paymentBalances[paymentToken] = paymentAmt;
 
         require(
             IRheaGeToken(rheaGeToken).transfer(buyer, rgtAmt),
@@ -122,7 +113,6 @@ contract RheaGeRegistry is RoleAware, IRheaGeRegistry {
         emit OffsetAndBurned(msg.sender, carbonTonAmt);
     }
 
-    // TODO: test this and make sure we can withdraw all ERC20 and ETH payments
     function withdrawPaidFunds(
         address to,
         address token,

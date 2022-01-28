@@ -17,7 +17,6 @@ contract RheaGeToken is RoleAware, ERC20, IRheaGeToken {
         setRoleManager(_roleManager);
     }
 
-    // TODO: do we want to not pass an account and always mint only to Treasury ???
     function mint(address to, uint256 amount) public override onlyRole(MINTER_ROLE) {
         _mint(to, amount);
     }
