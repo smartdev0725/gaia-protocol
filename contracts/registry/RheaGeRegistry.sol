@@ -78,15 +78,14 @@ contract RheaGeRegistry is RoleAware, IRheaGeRegistry {
 
     // TODO: who calls this function? who is msg.sender ?? how should we guard it if at all ??
     function purchase(
-        address buyer,
         address paymentToken,
         uint256 paymentAmt,
         uint256 rgtAmt
-    ) external payable override onlyRole(OPERATOR_ROLE) {
+    ) external payable override {
         // TODO: what other checks do we need ??
         // TODO: what other logic do we need here ??
         IPaymentManager(paymentManager).collectPayment(
-            buyer,
+            msg.sender,
             address(this),
             paymentToken,
             paymentAmt,
@@ -94,11 +93,11 @@ contract RheaGeRegistry is RoleAware, IRheaGeRegistry {
         );
 
         require(
-            IRheaGeToken(rheaGeToken).transfer(buyer, rgtAmt),
+            IRheaGeToken(rheaGeToken).transfer(msg.sender, rgtAmt),
             "RheaRegistry::purchase: RheaGeToken::transfer failed"
         );
 
-        emit InitialPurchase(buyer, rgtAmt, msg.sender);
+        emit InitialPurchase(msg.sender, rgtAmt);
     }
 
     function offset(

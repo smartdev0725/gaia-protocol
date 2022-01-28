@@ -27,8 +27,7 @@ interface IRheaGeRegistry {
     // TODO: do we need operator here and should we keep this name ??
     event InitialPurchase(
         address indexed buyer,
-        uint256 amount,
-        address operator
+        uint256 amount
     );
 
     // TODO: naming ??
@@ -47,7 +46,6 @@ interface IRheaGeRegistry {
     ) external;
 
     function purchase(
-        address buyer,
         address paymentToken,
         uint256 paymentAmt,
         uint256 rgtAmt
