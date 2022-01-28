@@ -2,8 +2,8 @@ import {
   getChaiBN,
   BigNumber,
 } from '@nomisma/nomisma-smart-contract-helpers';
-import { contract } from 'hardhat';
 import { roleNames } from '../helpers/roles';
+import { getTxCostInETH } from '../helpers/tx';
 import { tokenName, tokenSymbol } from './RheaGeTokenBasicTest';
 
 require('chai')
@@ -162,19 +162,17 @@ contract('RheaRegistry Test', ([
       await this.payToken.approve(this.payManager.address, payAmt2, { from: buyer2 });
 
       await this.registry.purchase(
-        buyer1,
         this.payToken.address,
         payAmt1,
         rheaGeAmt1,
-        { from: operator }
+        { from: buyer1 }
       ).should.be.fulfilled;
 
       await this.registry.purchase(
-        buyer2,
         this.payToken.address,
         payAmt2,
         rheaGeAmt2,
-        { from: operator }
+        { from: buyer2 }
       ).should.be.fulfilled;
 
       const client1BalanceAfter = await this.rheaGe.balanceOf(buyer1);
@@ -195,7 +193,7 @@ contract('RheaRegistry Test', ([
 
       await this.payToken.approve(this.payManager.address, payAmt, { from: buyer1 });
 
-      await this.registry.purchase(buyer1, this.payToken.address, payAmt, rgAmount, { from: operator })
+      await this.registry.purchase(this.payToken.address, payAmt, rgAmount, { from: buyer1 })
         .should.be.rejectedWith('ERC20: transfer amount exceeds balance');
     });
 
@@ -207,25 +205,26 @@ contract('RheaRegistry Test', ([
 
       const client1BalanceBefore = await this.rheaGe.balanceOf(buyer1);
       const client2BalanceBefore = await this.rheaGe.balanceOf(buyer2);
-      // TODO: figure out who calls this function and if these commented balances should change here !!!
-      // const cl1EthBalBefore = new BigNumber(await web3.eth.getBalance(buyer1));
-      // const cl2EthBalBefore = new BigNumber(await web3.eth.getBalance(buyer2));
+      const cl1EthBalBefore = new BigNumber(await web3.eth.getBalance(buyer1));
+      const cl2EthBalBefore = new BigNumber(await web3.eth.getBalance(buyer2));
       const registryBalBefore = new BigNumber(await web3.eth.getBalance(this.registry.address));
 
-      await this.registry.purchase(buyer1, etherAddress, payAmt1, rheaGeAmt1, { from: operator, value: payAmt1 });
-      await this.registry.purchase(buyer2, etherAddress, payAmt2, rheaGeAmt2, { from: operator, value: payAmt2 });
+      const txRes1 = await this.registry.purchase(etherAddress, payAmt1, rheaGeAmt1, { from: buyer1, value: payAmt1 });
+      const txRes2 = await this.registry.purchase(etherAddress, payAmt2, rheaGeAmt2, { from: buyer2, value: payAmt2 });
+
+      const txCost1 = await getTxCostInETH(txRes1);
+      const txCost2 = await getTxCostInETH(txRes2);
 
       const client1BalanceAfter = await this.rheaGe.balanceOf(buyer1);
       const client2BalanceAfter = await this.rheaGe.balanceOf(buyer2);
-      // const cl1EthBalAfter = new BigNumber(await web3.eth.getBalance(buyer1));
-      // const cl2EthBalAfter = new BigNumber(await web3.eth.getBalance(buyer2));
+      const cl1EthBalAfter = new BigNumber(await web3.eth.getBalance(buyer1));
+      const cl2EthBalAfter = new BigNumber(await web3.eth.getBalance(buyer2));
       const registryBalAfter = new BigNumber(await web3.eth.getBalance(this.registry.address));
 
       client1BalanceAfter.sub(client1BalanceBefore).should.be.bignumber.equal(rheaGeAmt1);
       client2BalanceAfter.sub(client2BalanceBefore).should.be.bignumber.equal(rheaGeAmt2);
-      // TODO: see TODO above
-      // cl1EthBalAfter.sub(cl1EthBalBefore).should.be.bignumber.equal(payAmt1);
-      // cl2EthBalAfter.sub(cl2EthBalBefore).should.be.bignumber.equal(payAmt2);
+      cl1EthBalBefore.sub(cl1EthBalAfter).sub(txCost1).should.be.bignumber.equal(payAmt1);
+      cl2EthBalBefore.sub(cl2EthBalAfter).sub(txCost2).should.be.bignumber.equal(payAmt2);
 
       registryBalAfter.sub(registryBalBefore).should.be.bignumber.equal(
         payAmt1.add(payAmt2)
@@ -238,11 +237,10 @@ contract('RheaRegistry Test', ([
       const incorrectPayAmt = payAmt.div(new BigNumber(2));
 
       await this.registry.purchase(
-        buyer1,
         etherAddress,
         incorrectPayAmt,
         rheaGeAmt,
-        { from: operator, value: payAmt }
+        { from: buyer1, value: payAmt }
       ).should.be.rejectedWith('PaymentManager::collectPayment: incorrect amount has been passed with ETH purchase');
     });
 
@@ -251,11 +249,10 @@ contract('RheaRegistry Test', ([
       const payAmt = new BigNumber(79);
 
       await this.registry.purchase(
-        buyer1,
         this.payToken.address,
         payAmt,
         rheaGeAmt,
-        { from: operator, value: payAmt }
+        { from: buyer1, value: payAmt }
       ).should.be.rejectedWith('PaymentManager::collectPayment: ETH has been sent with an ERC20 purchase');
     });
 
@@ -264,19 +261,17 @@ contract('RheaRegistry Test', ([
       const zeroAmt = new BigNumber(0);
 
       await this.registry.purchase(
-        buyer1,
         this.payToken.address,
         zeroAmt,
         rheaGeAmt,
-        { from: operator }
+        { from: buyer1 }
       ).should.be.rejectedWith('PaymentManager::collectPayment: no payment provided');
 
       await this.registry.purchase(
-        buyer1,
         this.payToken.address,
         zeroAmt,
         rheaGeAmt,
-        { from: operator, value: zeroAmt }
+        { from: buyer1, value: zeroAmt }
       ).should.be.rejectedWith('PaymentManager::collectPayment: no payment provided');
     });
 
@@ -285,11 +280,10 @@ contract('RheaRegistry Test', ([
       const payAmt = new BigNumber(79);
 
       await this.registry.purchase(
-        buyer1,
         nonWhitelistedTokenMock,
         payAmt,
         rheaGeAmt,
-        { from: operator }
+        { from: buyer1 }
       ).should.be.rejectedWith('PaymentManager::validateToken: Token is not whitelisted');
     });
 
@@ -298,11 +292,10 @@ contract('RheaRegistry Test', ([
       const payAmt = new BigNumber(10000000000000).mul(new BigNumber(10).pow(new BigNumber(18)));
 
       await this.registry.purchase(
-        buyer1,
         etherAddress,
         payAmt,
         rheaGeAmt,
-        { from: operator, value: payAmt }
+        { from: buyer1, value: payAmt }
       ).should.be.rejectedWith('sender doesn\'t have enough funds to send tx.');
     });
 
@@ -311,11 +304,10 @@ contract('RheaRegistry Test', ([
       const payAmt = new BigNumber(79);
 
       await this.registry.purchase(
-        buyer1,
         this.payToken.address,
         payAmt,
         rheaGeAmt,
-        { from: operator }
+        { from: buyer1 }
       ).should.be.rejectedWith('ERC20: transfer amount exceeds allowance');
     });
   });
@@ -341,8 +333,8 @@ contract('RheaRegistry Test', ([
         { from: minter }
       ).should.be.fulfilled;
 
-      await this.registry.purchase(offsetter1, this.payToken.address, payAmt, tokenAmtBought, { from: operator });
-      await this.registry.purchase(buyer1, this.payToken.address, payAmt, tokenAmtBought, { from: operator });
+      await this.registry.purchase(this.payToken.address, payAmt, tokenAmtBought, { from: offsetter1 });
+      await this.registry.purchase(this.payToken.address, payAmt, tokenAmtBought, { from: buyer1 });
 
       const offsetterBalanceBefore = await this.rheaGe.balanceOf(offsetter1);
 
@@ -418,7 +410,7 @@ contract('RheaRegistry Test', ([
       const payAmt = new BigNumber(178);
       const rheaGeAmt = new BigNumber(37);
 
-      await this.registry.purchase(buyer1, etherAddress, payAmt, rheaGeAmt, { from: operator, value: payAmt });
+      await this.registry.purchase(etherAddress, payAmt, rheaGeAmt, { from: buyer1, value: payAmt });
 
       const receiverBalBefore = new BigNumber(await web3.eth.getBalance(fundsReceiver));
       const registryBalBefore = new BigNumber(await web3.eth.getBalance(this.registry.address));
@@ -438,7 +430,7 @@ contract('RheaRegistry Test', ([
 
       await this.payToken.approve(this.payManager.address, payAmt, { from: buyer1 });
 
-      await this.registry.purchase(buyer1, this.payToken.address, payAmt, rheaGeAmt, { from: operator });
+      await this.registry.purchase(this.payToken.address, payAmt, rheaGeAmt, { from: buyer1 });
 
       const receiverBalBefore = await this.payToken.balanceOf(fundsReceiver);
       const registryBalBefore = await this.payToken.balanceOf(this.registry.address);
@@ -464,7 +456,7 @@ contract('RheaRegistry Test', ([
       const rheaGeAmt = new BigNumber(37);
       const partToWithdraw = payAmt.div(new BigNumber(2));
 
-      await this.registry.purchase(buyer1, etherAddress, payAmt, rheaGeAmt, { from: operator, value: payAmt });
+      await this.registry.purchase(etherAddress, payAmt, rheaGeAmt, { from: buyer1, value: payAmt });
 
       const receiverBalBefore = new BigNumber(await web3.eth.getBalance(fundsReceiver));
       const registryBalBefore = new BigNumber(await web3.eth.getBalance(this.registry.address));
@@ -486,7 +478,7 @@ contract('RheaRegistry Test', ([
 
       await this.payToken.approve(this.payManager.address, payAmt, { from: buyer1 });
 
-      await this.registry.purchase(buyer1, this.payToken.address, payAmt, rheaGeAmt, { from: operator });
+      await this.registry.purchase(this.payToken.address, payAmt, rheaGeAmt, { from: buyer1 });
 
       const receiverBalBefore = await this.payToken.balanceOf(fundsReceiver);
       const registryBalBefore = await this.payToken.balanceOf(this.registry.address);
@@ -513,7 +505,7 @@ contract('RheaRegistry Test', ([
 
       await this.payToken.approve(this.payManager.address, payAmt, { from: buyer1 });
 
-      await this.registry.purchase(buyer1, this.payToken.address, payAmt, rheaGeAmt, { from: operator });
+      await this.registry.purchase(this.payToken.address, payAmt, rheaGeAmt, { from: buyer1 });
 
       await this.registry.withdrawPaidFunds(
         fundsReceiver,
