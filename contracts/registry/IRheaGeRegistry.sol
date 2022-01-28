@@ -59,9 +59,10 @@ interface IRheaGeRegistry {
 
     function setRheaGeToken(address _rheaGeToken) external;
 
-    function withdrawPaymentTokens(
+    function withdrawPaidFunds(
         address to,
         address token,
-        uint256 amount
+        uint256 amount,
+        bool withdrawAll
     ) external;
 }

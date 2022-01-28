@@ -6,6 +6,7 @@ import "../access/RoleAware.sol";
 import "../tokens/rgt/IRheaGeToken.sol";
 import "./IRheaGeRegistry.sol";
 import "../tokens/manage/IPaymentManager.sol";
+import "../tokens/manage/PaymentManager.sol";
 
 
 contract RheaGeRegistry is RoleAware, IRheaGeRegistry {
@@ -22,9 +23,8 @@ contract RheaGeRegistry is RoleAware, IRheaGeRegistry {
         bool created;
     }
 
-    // TODO: do we need to store Projects ??
-
     address public rheaGeToken;
+    // TODO: this contract can possibly be part of the same diamond under the Proxy (Router)
     address public paymentManager;
 
     mapping(string => CCBatch) public registeredBatches;
@@ -123,12 +123,29 @@ contract RheaGeRegistry is RoleAware, IRheaGeRegistry {
     }
 
     // TODO: test this and make sure we can withdraw all ERC20 and ETH payments
-    function withdrawPaymentTokens(
+    function withdrawPaidFunds(
         address to,
         address token,
-        uint256 amount
+        uint256 amount,
+        bool withdrawAll
     ) external override onlyRole(GOVERNOR_ROLE) {
-        IERC20(token).safeTransfer(to, amount);
+        // TODO: think on the archi of Payments and where should each function be
+        //  this contract vs PaymentManager
+        uint256 toWithdrawAmt;
+        if (token == IPaymentManager(paymentManager).etherAddress()) {
+            toWithdrawAmt = withdrawAll && amount == 0
+                ? address(this).balance
+                : amount;
+
+            (bool success, ) = to.call{value: toWithdrawAmt}("");
+            require(success, "RheaGeRegistry::withdrawPaidFunds: ETH transfer failed");
+        } else {
+            toWithdrawAmt = withdrawAll && amount == 0
+                ? IERC20(token).balanceOf(address(this))
+                : amount;
+
+            IERC20(token).safeTransfer(to, toWithdrawAmt);
+        }
     }
 
     function setRheaGeToken(address _rheaGeToken) external override onlyRole(GOVERNOR_ROLE) {
