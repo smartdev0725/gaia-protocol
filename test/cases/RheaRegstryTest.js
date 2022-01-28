@@ -35,6 +35,7 @@ contract('RheaRegistry Test', ([
   rheaGeTokenMock,
   etherAddress,
   nonWhitelistedTokenMock,
+  fundsReceiver,
 ]) => {
   const batchDataBase = {
     serialNumber: '1234567',
@@ -83,15 +84,23 @@ contract('RheaRegistry Test', ([
       ],
       { from: governor }
     );
+
+    await this.registry.generateBatch(
+      ...Object.values(batchDataBase),
+      { from: minter }
+    );
   });
 
   describe('#generateBatch()', () => {
     it('should generate new batch and mint the correct amount of tokens', async function () {
+      const newBatch = {
+        ...batchDataBase,
+        serialNumber: '131553135',
+      };
       const registryBalBefore = await this.rheaGe.balanceOf(this.registry.address);
-      registryBalBefore.should.be.bignumber.equal(new BigNumber(0));
 
       await this.registry.generateBatch(
-        ...Object.values(batchDataBase),
+        ...Object.values(newBatch),
         { from: minter }
       ).should.be.fulfilled;
 
@@ -103,18 +112,18 @@ contract('RheaRegistry Test', ([
         units: unitsSC,
         owner: ownerSC,
         created,
-      } = await this.registry.registeredBatches(batchDataBase.serialNumber);
+      } = await this.registry.registeredBatches(newBatch.serialNumber);
 
-      serialNumberSC.should.be.equal(batchDataBase.serialNumber);
-      projectIdSC.should.be.bignumber.equal(batchDataBase.projectId);
-      vintageSC.should.be.equal(batchDataBase.vintage);
-      cresitTypeSC.should.be.equal(batchDataBase.creditType);
-      unitsSC.should.be.bignumber.equal(batchDataBase.units);
-      ownerSC.should.be.equal(batchDataBase.batchOwner);
+      serialNumberSC.should.be.equal(newBatch.serialNumber);
+      projectIdSC.should.be.bignumber.equal(newBatch.projectId);
+      vintageSC.should.be.equal(newBatch.vintage);
+      cresitTypeSC.should.be.equal(newBatch.creditType);
+      unitsSC.should.be.bignumber.equal(newBatch.units);
+      ownerSC.should.be.equal(newBatch.batchOwner);
       created.should.be.equal(true);
 
       const registryBalAfter = await this.rheaGe.balanceOf(this.registry.address);
-      registryBalAfter.sub(registryBalBefore).should.be.bignumber.equal(batchDataBase.units);
+      registryBalAfter.sub(registryBalBefore).should.be.bignumber.equal(newBatch.units);
       registryBalAfter.sub(registryBalBefore).should.be.bignumber.equal(unitsSC);
     });
 
@@ -137,19 +146,6 @@ contract('RheaRegistry Test', ([
   });
 
   describe('#purchase()', () => {
-    before(async function () {
-      const newBatch = {
-        ...batchDataBase,
-        serialNumber: '2222222',
-        units: new BigNumber(1000000),
-      };
-
-      await this.registry.generateBatch(
-        ...Object.values(newBatch),
-        { from: minter }
-      ).should.be.fulfilled;
-    });
-
     it('should transfer minted tokens to 2 different clients who pay with ERC20', async function () {
       const rheaGeAmt1 = new BigNumber(50);
       const rheaGeAmt2 = new BigNumber(35);
@@ -368,11 +364,178 @@ contract('RheaRegistry Test', ([
       retiredBalanceClient2.should.be.bignumber.equal(tokenAmtOffset2);
       totalSupplyRetired.should.be.bignumber.equal(tokenAmtOffset1.add(tokenAmtOffset2));
     });
+
+    // TODO: add more tests here !!!
   });
 
-  // TODO: describe('ACCESS', () => {}); test access to each function
+  describe('#withdrawPaidFunds()', () => {
+    before(async function () {
+      this.roleManager = await RoleManager.new([ governor ], '1');
+      this.payToken = await Token.new('ERC20Mock', 'ETM', buyer1);
+      this.rheaGe = await RheaGe.new(
+        tokenName,
+        tokenSymbol,
+        this.roleManager.address,
+        { from: governor }
+      );
 
-  // TODO: describe('Events', () => {}); test all event on Registry
+      this.payManager = await PaymentManager.new(this.roleManager.address, etherAddress);
+
+      await this.payManager.addTokensToWhitelist([ this.payToken.address, etherAddress ]);
+
+      this.registry = await Registry.new(
+        this.rheaGe.address,
+        this.roleManager.address,
+        this.payManager.address,
+        { from: governor }
+      );
+
+      await this.roleManager.addRolesForAddresses(
+        [
+          minter,
+          this.registry.address,
+          operator,
+          this.registry.address,
+          this.registry.address,
+        ],
+        [
+          MINTER_ROLE,
+          MINTER_ROLE,
+          OPERATOR_ROLE,
+          OPERATOR_ROLE,
+          BURNER_ROLE,
+        ],
+        { from: governor }
+      );
+
+      await this.registry.generateBatch(
+        ...Object.values(batchDataBase),
+        { from: minter }
+      );
+    });
+
+    it('should be able to withdraw all of ETH client has paid with to a specified address', async function () {
+      const payAmt = new BigNumber(178);
+      const rheaGeAmt = new BigNumber(37);
+
+      await this.registry.purchase(buyer1, etherAddress, payAmt, rheaGeAmt, { from: operator, value: payAmt });
+
+      const receiverBalBefore = new BigNumber(await web3.eth.getBalance(fundsReceiver));
+      const registryBalBefore = new BigNumber(await web3.eth.getBalance(this.registry.address));
+
+      await this.registry.withdrawPaidFunds(fundsReceiver, etherAddress, '0', true, { from: governor });
+
+      const receiverBalAfter = new BigNumber(await web3.eth.getBalance(fundsReceiver));
+      const registryBalAfter = new BigNumber(await web3.eth.getBalance(this.registry.address));
+
+      receiverBalAfter.sub(receiverBalBefore).should.be.bignumber.equal(payAmt);
+      registryBalBefore.sub(registryBalAfter).should.be.bignumber.equal(payAmt);
+    });
+
+    it('should be able to withdraw all of ERC20 client has paid with to a specified address', async function () {
+      const payAmt = new BigNumber(178);
+      const rheaGeAmt = new BigNumber(37);
+
+      await this.payToken.approve(this.payManager.address, payAmt, { from: buyer1 });
+
+      await this.registry.purchase(buyer1, this.payToken.address, payAmt, rheaGeAmt, { from: operator });
+
+      const receiverBalBefore = await this.payToken.balanceOf(fundsReceiver);
+      const registryBalBefore = await this.payToken.balanceOf(this.registry.address);
+
+      await this.registry.withdrawPaidFunds(
+        fundsReceiver,
+        this.payToken.address,
+        '0',
+        true,
+        { from: governor }
+      );
+
+      const receiverBalAfter = await this.payToken.balanceOf(fundsReceiver);
+      const registryBalAfter = await this.payToken.balanceOf(this.registry.address);
+
+      receiverBalAfter.sub(receiverBalBefore).should.be.bignumber.equal(payAmt);
+      registryBalBefore.sub(registryBalAfter).should.be.bignumber.equal(payAmt);
+    });
+
+    // eslint-disable-next-line max-len
+    it('should be able to withdraw specified amount of ETH client has paid with to a specified address', async function () {
+      const payAmt = new BigNumber(178);
+      const rheaGeAmt = new BigNumber(37);
+      const partToWithdraw = payAmt.div(new BigNumber(2));
+
+      await this.registry.purchase(buyer1, etherAddress, payAmt, rheaGeAmt, { from: operator, value: payAmt });
+
+      const receiverBalBefore = new BigNumber(await web3.eth.getBalance(fundsReceiver));
+      const registryBalBefore = new BigNumber(await web3.eth.getBalance(this.registry.address));
+
+      await this.registry.withdrawPaidFunds(fundsReceiver, etherAddress, partToWithdraw, false, { from: governor });
+
+      const receiverBalAfter = new BigNumber(await web3.eth.getBalance(fundsReceiver));
+      const registryBalAfter = new BigNumber(await web3.eth.getBalance(this.registry.address));
+
+      receiverBalAfter.sub(receiverBalBefore).should.be.bignumber.equal(partToWithdraw);
+      registryBalBefore.sub(registryBalAfter).should.be.bignumber.equal(partToWithdraw);
+    });
+
+    // eslint-disable-next-line max-len
+    it('should be able to withdraw specified amount of ERC20 client has paid with to a specified address', async function () {
+      const payAmt = new BigNumber(178);
+      const rheaGeAmt = new BigNumber(37);
+      const partToWithdraw = payAmt.div(new BigNumber(2));
+
+      await this.payToken.approve(this.payManager.address, payAmt, { from: buyer1 });
+
+      await this.registry.purchase(buyer1, this.payToken.address, payAmt, rheaGeAmt, { from: operator });
+
+      const receiverBalBefore = await this.payToken.balanceOf(fundsReceiver);
+      const registryBalBefore = await this.payToken.balanceOf(this.registry.address);
+
+      await this.registry.withdrawPaidFunds(
+        fundsReceiver,
+        this.payToken.address,
+        partToWithdraw,
+        false,
+        { from: governor }
+      );
+
+      const receiverBalAfter = await this.payToken.balanceOf(fundsReceiver);
+      const registryBalAfter = await this.payToken.balanceOf(this.registry.address);
+
+      receiverBalAfter.sub(receiverBalBefore).should.be.bignumber.equal(partToWithdraw);
+      registryBalBefore.sub(registryBalAfter).should.be.bignumber.equal(partToWithdraw);
+    });
+
+    it('should NOT be able to withdraw more funds (ERC, ETH) than the Registry has', async function () {
+      const payAmt = new BigNumber(178);
+      const rheaGeAmt = new BigNumber(37);
+      const toWithdrawAmt = payAmt.mul(new BigNumber(100));
+
+      await this.payToken.approve(this.payManager.address, payAmt, { from: buyer1 });
+
+      await this.registry.purchase(buyer1, this.payToken.address, payAmt, rheaGeAmt, { from: operator });
+
+      await this.registry.withdrawPaidFunds(
+        fundsReceiver,
+        this.payToken.address,
+        toWithdrawAmt,
+        false,
+        { from: governor }
+      ).should.be.rejectedWith('ERC20: transfer amount exceeds balance');
+
+      await this.registry.withdrawPaidFunds(
+        fundsReceiver,
+        etherAddress,
+        toWithdrawAmt,
+        false,
+        { from: governor }
+      ).should.be.rejectedWith('RheaGeRegistry::withdrawPaidFunds: ETH transfer failed');
+    });
+  });
+
+  // TODO: test access to each function
+
+  // TODO: describe('Events', () => {}); test all events on Registry
 
   it('should set new rheaGeToken address', async function () {
     const previousTokenAddress = await this.registry.rheaGeToken();
