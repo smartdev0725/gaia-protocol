@@ -1,4 +1,5 @@
 import { BigNumber, getChaiBN } from '@nomisma/nomisma-smart-contract-helpers';
+import { getDefBatch } from '../helpers/batches';
 import { getTxCostInETH } from '../helpers/tx';
 import { tokenName, tokenSymbol } from './RheaGeTokenBasicTest';
 import { roleNames } from '../helpers/roles';
@@ -20,16 +21,6 @@ const Registry = artifacts.require('./RheaGeRegistry.sol');
 const RoleManager = artifacts.require('./RoleManager.sol');
 const PaymentManager = artifacts.require('./PaymentManager.sol');
 const Token = artifacts.require('./ERC20Mock.sol');
-
-
-export const getDefBatch = (owner, units = new BigNumber(10000)) => ({
-  serialNumber: '1234567',
-  projectId: new BigNumber(777),
-  vintage: 'vintage',
-  creditType: 'creditType',
-  units,
-  batchOwner: owner,
-});
 
 
 contract('Full Cycle Test', ([
