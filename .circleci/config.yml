@@ -114,12 +114,11 @@ workflows:
     jobs:
       - test-main:
           context: read
-# TODO: add this when the first official version is finished so we can release
-#      - release:
-#          context: write
-#          requires:
-#            - test-main
-#          filters:
-#            branches:
-#              only:
-#                - master
+      - release:
+          context: write
+          requires:
+            - test-main
+          filters:
+            branches:
+              only:
+                - master
