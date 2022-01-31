@@ -78,16 +78,16 @@ jobs:
       - run:
           name: release
           command: |
-#            export JAVA_HOME=/usr/lib/jvm/jdk-11.0.4
-#            export PATH=${PATH}:${JAVA_HOME}/bin
-#            export M2_HOME=/opt/maven
-#            export MAVEN_HOME=/opt/maven
-#            export PATH=${M2_HOME}/bin:${PATH}
+            export JAVA_HOME=/usr/lib/jvm/jdk-11.0.4
+            export PATH=${PATH}:${JAVA_HOME}/bin
+            export M2_HOME=/opt/maven
+            export MAVEN_HOME=/opt/maven
+            export PATH=${M2_HOME}/bin:${PATH}
 
             git config user.email "bot@nomisma.one"
             git config user.name "Nomisma Bot"
-#            mkdir -p ${HOME}/.m2
-#            mv java/settings.xml ${HOME}/.m2
+            mkdir -p ${HOME}/.m2
+            mv java/settings.xml ${HOME}/.m2
             mv .circleci/npm/.npmrc .
 
             yarn global add semver
