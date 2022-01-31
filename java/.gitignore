@@ -1,0 +1,13 @@
+.DS_Store
+target/
+
+# Editor directories and files
+.idea
+*.iml
+**/nb-configuration.xml
+
+# eclipse ide files
+**/.project
+**/.settings
+**/.classpath
+

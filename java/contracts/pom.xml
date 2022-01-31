@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>one.nomisma.ccp</groupId>
+    <artifactId>rhea-ge-contracts-abi</artifactId>
+    <version>v0.0.1</version>
+
+    <name>RheaGe Contracts abi</name>
+    <description>RheaGe Contracts abi json files</description>
+
+    <build>
+        <resources>
+            <resource>
+                <directory>../../artifacts/contracts</directory>
+                <includes>
+                    <include>*.json</include>
+                </includes>
+            </resource>
+        </resources>
+    </build>
+
+    <distributionManagement>
+        <repository>
+            <id>github</id>
+            <name>GitHub NomismaTech rhea-ge-protocol Apache Maven Packages</name>
+            <url>https://maven.pkg.github.com/NomismaTech/rhea-ge-protocol</url>
+        </repository>
+    </distributionManagement>
+</project>
