@@ -35,6 +35,10 @@ jobs:
           command: |
             yarn lint
       - run:
+          name: contract size test
+          command: |
+            yarn test:contract-size
+      - run:
            name: yarn coverage
            command: |
              yarn test:coverage
