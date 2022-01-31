@@ -96,7 +96,7 @@ jobs:
             next_version=$(/home/circleci/.yarn/bin/semver ${last_version} -i prerelease --preid dev)
 
             sed -i "s/\"version\": \".*\"/\"version\": \"${next_version}\"/" package.json
-            sed -i "s/v0.1.1/v${next_version}/" java/contracts/pom.xml
+            sed -i "s/v0.0.1/v${next_version}/" java/contracts/pom.xml
 
             yarn mvn
 
