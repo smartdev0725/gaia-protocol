@@ -4,43 +4,24 @@ pragma solidity ^0.8.11;
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "../access/RoleAware.sol";
 import "../tokens/rgt/IRheaGeToken.sol";
-import "./IRheaGeRegistry.sol";
-import "../tokens/manage/IPaymentManager.sol";
-import "../tokens/manage/PaymentManager.sol";
+import "./IRGRegistry.sol";
+import "../tokens/validation/ITokenValidator.sol";
+import "./RGRegistryStorage.sol";
 
 
-contract RheaGeRegistry is RoleAware, IRheaGeRegistry {
+contract RGRegistry is RoleAware, RGRegistryStorage, IRGRegistry {
     using SafeERC20 for IERC20;
-
-    // TODO: which fields do we need here ??
-    struct CCBatch {
-        string serialNumber;
-        uint256 projectId;
-        string vintage;
-        string creditType;
-        uint256 units;
-        address owner;
-        bool created;
-    }
-
-    address public rheaGeToken;
-    // TODO: this contract can possibly be part of the same diamond under the Proxy (Router)
-    address public paymentManager;
-
-    mapping(string => CCBatch) public registeredBatches;
-    mapping(address => uint256) public retiredBalances;
-    uint256 public totalSupplyRetired;
 
     constructor(
         address _rheaGeToken,
         address _roleManager,
-        address _paymentManager
+        address _tokenValidator
     ) {
-        require(_rheaGeToken != address(0), "RheaRegistry: zero address passed as _rheaGeToken");
-        require(_paymentManager != address(0), "RheaRegistry: zero address passed as _paymentManager");
+        require(_rheaGeToken != address(0), "RGRegistry: zero address passed as _rheaGeToken");
+        require(_tokenValidator != address(0), "RGRegistry: zero address passed as _paymentManager");
         rheaGeToken = _rheaGeToken;
         setRoleManager(_roleManager);
-        paymentManager = _paymentManager;
+        tokenValidator = _tokenValidator;
     }
 
     function generateBatch(
@@ -51,7 +32,7 @@ contract RheaGeRegistry is RoleAware, IRheaGeRegistry {
         uint256 units,
         address batchOwner
     ) external override onlyRole(MINTER_ROLE) {
-        require(!registeredBatches[serialNumber].created, "RheaRegistry::generateBatch: Batch already created");
+        require(!registeredBatches[serialNumber].created, "RGRegistry::generateBatch: Batch already created");
 
         registeredBatches[serialNumber] = CCBatch(
             serialNumber,
@@ -84,17 +65,16 @@ contract RheaGeRegistry is RoleAware, IRheaGeRegistry {
     ) external payable override {
         // TODO: what other checks do we need ??
         // TODO: what other logic do we need here ??
-        IPaymentManager(paymentManager).collectPayment(
+        collectPayment(
             msg.sender,
             address(this),
             paymentToken,
-            paymentAmt,
-            msg.value
+            paymentAmt
         );
 
         require(
             IRheaGeToken(rheaGeToken).transfer(msg.sender, rgtAmt),
-            "RheaRegistry::purchase: RheaGeToken::transfer failed"
+            "RGRegistry::purchase: RheaGeToken::transfer failed"
         );
 
         emit InitialPurchase(msg.sender, rgtAmt);
@@ -112,6 +92,32 @@ contract RheaGeRegistry is RoleAware, IRheaGeRegistry {
         emit OffsetAndBurned(msg.sender, carbonTonAmt);
     }
 
+    // TODO: should we make a better guard or none at all ??
+    // TODO: this function should probably be in Registry
+    function collectPayment(
+        address from,
+        address to,
+        address tokenAddress,
+        uint256 amount
+    ) internal {
+        bool isEther = ITokenValidator(tokenValidator).validateToken(tokenAddress);
+        uint256 paymentAmt = isEther ? msg.value : amount;
+        require(paymentAmt != 0, "RGRegistry::collectPayment: no payment provided");
+
+        if (isEther) {
+            require(
+                msg.value == amount,
+                "RGRegistry::collectPayment: incorrect amount has been passed with ETH purchase"
+            );
+        } else {
+            require(
+                msg.value == 0,
+                "RGRegistry::collectPayment: ETH has been sent with an ERC20 purchase"
+            );
+            IERC20(tokenAddress).safeTransferFrom(from, to, paymentAmt);
+        }
+    }
+
     function withdrawPaidFunds(
         address to,
         address token,
@@ -121,7 +127,8 @@ contract RheaGeRegistry is RoleAware, IRheaGeRegistry {
         // TODO: think on the archi of Payments and where should each function be
         //  this contract vs PaymentManager
         uint256 toWithdrawAmt;
-        if (token == IPaymentManager(paymentManager).etherAddress()) {
+        // this returns if token is ETH or now + validates
+        if (ITokenValidator(tokenValidator).validateToken(token)) {
             toWithdrawAmt = withdrawAll && amount == 0
                 ? address(this).balance
                 : amount;
@@ -140,7 +147,7 @@ contract RheaGeRegistry is RoleAware, IRheaGeRegistry {
     function setRheaGeToken(address _rheaGeToken) external override onlyRole(GOVERNOR_ROLE) {
         require(
             _rheaGeToken != address(0),
-            "RheaRegistry::generateBatch: 0x0 address passed as rheaGeTokenAddress"
+            "RGRegistry::generateBatch: 0x0 address passed as rheaGeTokenAddress"
         );
         rheaGeToken = _rheaGeToken;
     }

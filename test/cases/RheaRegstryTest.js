@@ -13,9 +13,9 @@ require('chai')
 
 
 const RheaGe = artifacts.require('./RheaGeToken.sol');
-const Registry = artifacts.require('./RheaGeRegistry.sol');
+const Registry = artifacts.require('./RGRegistry.sol');
 const RoleManager = artifacts.require('./RoleManager.sol');
-const PaymentManager = artifacts.require('./PaymentManager.sol');
+const PaymentManager = artifacts.require('./TokenValidator.sol');
 const Token = artifacts.require('./ERC20Mock.sol');
 
 const {
@@ -24,7 +24,7 @@ const {
   OPERATOR_ROLE,
 } = roleNames;
 
-contract('RheaRegistry Test', ([
+contract('RheaGeRegistry Test', ([
   governor,
   minter,
   operator,
@@ -141,7 +141,7 @@ contract('RheaRegistry Test', ([
       await this.registry.generateBatch(
         ...Object.values(newBatch),
         { from: minter }
-      ).should.be.rejectedWith('RheaRegistry::generateBatch: Batch already created');
+      ).should.be.rejectedWith('RGRegistry::generateBatch: Batch already created');
     });
   });
 
@@ -158,8 +158,8 @@ contract('RheaRegistry Test', ([
       const client2BalanceBefore = await this.rheaGe.balanceOf(buyer2);
       const registryBalBefore = await this.payToken.balanceOf(this.registry.address);
 
-      await this.payToken.approve(this.payManager.address, payAmt1, { from: buyer1 });
-      await this.payToken.approve(this.payManager.address, payAmt2, { from: buyer2 });
+      await this.payToken.approve(this.registry.address, payAmt1, { from: buyer1 });
+      await this.payToken.approve(this.registry.address, payAmt2, { from: buyer2 });
 
       await this.registry.purchase(
         this.payToken.address,
@@ -191,7 +191,7 @@ contract('RheaRegistry Test', ([
       const rgAmount = new BigNumber(1000000000);
       const payAmt = new BigNumber(15);
 
-      await this.payToken.approve(this.payManager.address, payAmt, { from: buyer1 });
+      await this.payToken.approve(this.registry.address, payAmt, { from: buyer1 });
 
       await this.registry.purchase(this.payToken.address, payAmt, rgAmount, { from: buyer1 })
         .should.be.rejectedWith('ERC20: transfer amount exceeds balance');
@@ -241,7 +241,7 @@ contract('RheaRegistry Test', ([
         incorrectPayAmt,
         rheaGeAmt,
         { from: buyer1, value: payAmt }
-      ).should.be.rejectedWith('PaymentManager::collectPayment: incorrect amount has been passed with ETH purchase');
+      ).should.be.rejectedWith('RGRegistry::collectPayment: incorrect amount has been passed with ETH purchase');
     });
 
     it('should NOT transfer if ETH has been sent with an ERC20 purchase', async function () {
@@ -253,7 +253,7 @@ contract('RheaRegistry Test', ([
         payAmt,
         rheaGeAmt,
         { from: buyer1, value: payAmt }
-      ).should.be.rejectedWith('PaymentManager::collectPayment: ETH has been sent with an ERC20 purchase');
+      ).should.be.rejectedWith('RGRegistry::collectPayment: ETH has been sent with an ERC20 purchase');
     });
 
     it('should NOT transfer if payment was zero with an ERC20 or ETH purchase', async function () {
@@ -265,14 +265,14 @@ contract('RheaRegistry Test', ([
         zeroAmt,
         rheaGeAmt,
         { from: buyer1 }
-      ).should.be.rejectedWith('PaymentManager::collectPayment: no payment provided');
+      ).should.be.rejectedWith('RGRegistry::collectPayment: no payment provided');
 
       await this.registry.purchase(
         this.payToken.address,
         zeroAmt,
         rheaGeAmt,
         { from: buyer1, value: zeroAmt }
-      ).should.be.rejectedWith('PaymentManager::collectPayment: no payment provided');
+      ).should.be.rejectedWith('RGRegistry::collectPayment: no payment provided');
     });
 
     it('should NOT transfer if paying with non-whitelisted token', async function () {
@@ -284,7 +284,7 @@ contract('RheaRegistry Test', ([
         payAmt,
         rheaGeAmt,
         { from: buyer1 }
-      ).should.be.rejectedWith('PaymentManager::validateToken: Token is not whitelisted');
+      ).should.be.rejectedWith('TokenValidator::validateToken: Token is not whitelisted');
     });
 
     it('should NOT transfer if client has insufficient funds in ETH', async function () {
@@ -325,8 +325,8 @@ contract('RheaRegistry Test', ([
       const payAmt = new BigNumber(50);
 
       await this.payToken.transfer(offsetter1, payAmt, { from: buyer1 });
-      await this.payToken.approve(this.payManager.address, payAmt, { from: offsetter1 });
-      await this.payToken.approve(this.payManager.address, payAmt, { from: buyer1 });
+      await this.payToken.approve(this.registry.address, payAmt, { from: offsetter1 });
+      await this.payToken.approve(this.registry.address, payAmt, { from: buyer1 });
 
       await this.registry.generateBatch(
         ...Object.values(newBatch),
@@ -428,7 +428,7 @@ contract('RheaRegistry Test', ([
       const payAmt = new BigNumber(178);
       const rheaGeAmt = new BigNumber(37);
 
-      await this.payToken.approve(this.payManager.address, payAmt, { from: buyer1 });
+      await this.payToken.approve(this.registry.address, payAmt, { from: buyer1 });
 
       await this.registry.purchase(this.payToken.address, payAmt, rheaGeAmt, { from: buyer1 });
 
@@ -476,7 +476,7 @@ contract('RheaRegistry Test', ([
       const rheaGeAmt = new BigNumber(37);
       const partToWithdraw = payAmt.div(new BigNumber(2));
 
-      await this.payToken.approve(this.payManager.address, payAmt, { from: buyer1 });
+      await this.payToken.approve(this.registry.address, payAmt, { from: buyer1 });
 
       await this.registry.purchase(this.payToken.address, payAmt, rheaGeAmt, { from: buyer1 });
 
@@ -503,7 +503,7 @@ contract('RheaRegistry Test', ([
       const rheaGeAmt = new BigNumber(37);
       const toWithdrawAmt = payAmt.mul(new BigNumber(100));
 
-      await this.payToken.approve(this.payManager.address, payAmt, { from: buyer1 });
+      await this.payToken.approve(this.registry.address, payAmt, { from: buyer1 });
 
       await this.registry.purchase(this.payToken.address, payAmt, rheaGeAmt, { from: buyer1 });
 

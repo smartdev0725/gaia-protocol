@@ -2,7 +2,7 @@
 pragma solidity ^0.8.11;
 
 
-interface IRheaGeRegistry {
+interface IRGRegistry {
     // TODO: which are indexed ??
     event BatchGenerated(
         string serialNumber,

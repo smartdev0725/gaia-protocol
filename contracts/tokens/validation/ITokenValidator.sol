@@ -2,26 +2,18 @@
 pragma solidity ^0.8.11;
 
 
-interface IPaymentManager {
+interface ITokenValidator {
     function whitelistedTokens(address) external view returns (bool);
 
     function etherAddress() external view returns (address);
 
-    function validateToken(address token) external view;
+    function validateToken(address token) external view returns (bool isEther);
 
     function addTokensToWhitelist(
         address[] memory tokens
     ) external;
 
     function removeTokenFromWhitelist(address token) external;
-
-    function collectPayment(
-        address from,
-        address to,
-        address tokenAddress,
-        uint256 amount,
-        uint256 msgValue
-    ) external;
 
     function setEtherAddress(address _etherAddress) external;
 }
