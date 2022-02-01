@@ -11,7 +11,7 @@
     "eslint:tests": "node node_modules/.bin/eslint 'test/**/*.js*'",
     "lint": "yarn solhint && yarn eslint:tests",
     "test": "node --max-old-space-size=4096 --require ./test/test-global.js ./node_modules/.bin/hardhat test",
-    "test:contract-size": "node --max-old-space-size=4096 --require ./test/test-global.js ./node_modules/.bin/hardhat test test/size-test/ContractSizeDeploymentTest.js",
+    "test:contract-size": "node --max-old-space-size=4096 --require ./test/test-global.js ./node_modules/.bin/hardhat test size-test/ContractSizeDeploymentTest.js",
     "test:coverage": "node --max-old-space-size=8192 --require ./test/test-global.js ./node_modules/.bin/hardhat coverage",
     "compile": "node ./node_modules/.bin/hardhat compile",
     "mvn": "yarn compile && cd java/contracts && mvn clean install"
