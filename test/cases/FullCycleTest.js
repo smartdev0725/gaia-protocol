@@ -1,5 +1,6 @@
 import { BigNumber, getChaiBN } from '@nomisma/nomisma-smart-contract-helpers';
 import { getDefBatch } from '../helpers/batches';
+import { deployRegistry } from '../helpers/registry';
 import { getTxCostInETH } from '../helpers/tx';
 import { tokenName, tokenSymbol } from './RheaGeTokenBasicTest';
 import { roleNames } from '../helpers/roles';
@@ -47,15 +48,15 @@ contract('Full Cycle Test', ([
       { from: governor }
     );
 
-    this.payManager = await PaymentManager.new(this.roleManager.address, etherAddress);
+    this.tokenValidator = await PaymentManager.new(this.roleManager.address, etherAddress);
 
-    await this.payManager.addTokensToWhitelist([ this.payToken.address, etherAddress ]);
+    await this.tokenValidator.addTokensToWhitelist([ this.payToken.address, etherAddress ]);
 
-    this.registry = await Registry.new(
+    this.registry = await deployRegistry(
       this.rgt.address,
       this.roleManager.address,
-      this.payManager.address,
-      { from: governor }
+      this.tokenValidator.address,
+      governor
     );
 
     await this.roleManager.addRolesForAddresses(

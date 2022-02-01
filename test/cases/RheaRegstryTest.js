@@ -2,6 +2,7 @@ import {
   getChaiBN,
   BigNumber,
 } from '@nomisma/nomisma-smart-contract-helpers';
+import { deployRegistry } from '../helpers/registry';
 import { roleNames } from '../helpers/roles';
 import { getTxCostInETH } from '../helpers/tx';
 import { tokenName, tokenSymbol } from './RheaGeTokenBasicTest';
@@ -15,7 +16,7 @@ require('chai')
 const RheaGe = artifacts.require('./RheaGeToken.sol');
 const Registry = artifacts.require('./RGRegistry.sol');
 const RoleManager = artifacts.require('./RoleManager.sol');
-const PaymentManager = artifacts.require('./TokenValidator.sol');
+const TokenValidator = artifacts.require('./TokenValidator.sol');
 const Token = artifacts.require('./ERC20Mock.sol');
 
 const {
@@ -56,15 +57,15 @@ contract('RheaGeRegistry Test', ([
       { from: governor }
     );
 
-    this.payManager = await PaymentManager.new(this.roleManager.address, etherAddress);
+    this.tokenValidator = await TokenValidator.new(this.roleManager.address, etherAddress);
 
-    await this.payManager.addTokensToWhitelist([ this.payToken.address, etherAddress ]);
+    await this.tokenValidator.addTokensToWhitelist([ this.payToken.address, etherAddress ]);
 
-    this.registry = await Registry.new(
+    this.registry = await deployRegistry(
       this.rheaGe.address,
       this.roleManager.address,
-      this.payManager.address,
-      { from: governor }
+      this.tokenValidator.address,
+      governor
     );
 
     await this.roleManager.addRolesForAddresses(
@@ -371,15 +372,15 @@ contract('RheaGeRegistry Test', ([
         { from: governor }
       );
 
-      this.payManager = await PaymentManager.new(this.roleManager.address, etherAddress);
+      this.tokenValidator = await TokenValidator.new(this.roleManager.address, etherAddress);
 
-      await this.payManager.addTokensToWhitelist([ this.payToken.address, etherAddress ]);
+      await this.tokenValidator.addTokensToWhitelist([ this.payToken.address, etherAddress ]);
 
-      this.registry = await Registry.new(
+      this.registry = await deployRegistry(
         this.rheaGe.address,
         this.roleManager.address,
-        this.payManager.address,
-        { from: governor }
+        this.tokenValidator.address,
+        governor
       );
 
       await this.roleManager.addRolesForAddresses(
