@@ -9,19 +9,25 @@ import "../tokens/validation/ITokenValidator.sol";
 import "./RGRegistryStorage.sol";
 
 
-contract RGRegistry is RoleAware, RGRegistryStorage, IRGRegistry {
+contract RGRegistry is RGRegistryStorage, IRGRegistry {
     using SafeERC20 for IERC20;
 
-    constructor(
+    function init(
         address _rheaGeToken,
         address _roleManager,
         address _tokenValidator
-    ) {
+    // TODO: proxy: figure out a good way to make this only callable by a Router
+    ) external override onlyRouter {
+        require(
+            initialized == false,
+            "RGRegistry: has already been initialized"
+        );
         require(_rheaGeToken != address(0), "RGRegistry: zero address passed as _rheaGeToken");
         require(_tokenValidator != address(0), "RGRegistry: zero address passed as _paymentManager");
         rheaGeToken = _rheaGeToken;
         setRoleManager(_roleManager);
         tokenValidator = _tokenValidator;
+        initialized = true;
     }
 
     function generateBatch(
@@ -31,7 +37,7 @@ contract RGRegistry is RoleAware, RGRegistryStorage, IRGRegistry {
         string calldata creditType,
         uint256 units,
         address batchOwner
-    ) external override onlyRole(MINTER_ROLE) {
+    ) external override onlyRole(MINTER_ROLE) onlyRouter {
         require(!registeredBatches[serialNumber].created, "RGRegistry::generateBatch: Batch already created");
 
         registeredBatches[serialNumber] = CCBatch(
@@ -62,7 +68,7 @@ contract RGRegistry is RoleAware, RGRegistryStorage, IRGRegistry {
         address paymentToken,
         uint256 paymentAmt,
         uint256 rgtAmt
-    ) external payable override {
+    ) external payable override onlyRouter {
         // TODO: what other checks do we need ??
         // TODO: what other logic do we need here ??
         collectPayment(
@@ -82,7 +88,7 @@ contract RGRegistry is RoleAware, RGRegistryStorage, IRGRegistry {
 
     function offset(
         uint256 carbonTonAmt
-    ) external override {
+    ) external override onlyRouter {
         IRheaGeToken(rheaGeToken).burn(msg.sender, carbonTonAmt);
         unchecked {
             retiredBalances[msg.sender] += carbonTonAmt;
@@ -123,7 +129,7 @@ contract RGRegistry is RoleAware, RGRegistryStorage, IRGRegistry {
         address token,
         uint256 amount,
         bool withdrawAll
-    ) external override onlyRole(GOVERNOR_ROLE) {
+    ) external override onlyRole(GOVERNOR_ROLE) onlyRouter {
         // TODO: think on the archi of Payments and where should each function be
         //  this contract vs PaymentManager
         uint256 toWithdrawAmt;
@@ -144,11 +150,15 @@ contract RGRegistry is RoleAware, RGRegistryStorage, IRGRegistry {
         }
     }
 
-    function setRheaGeToken(address _rheaGeToken) external override onlyRole(GOVERNOR_ROLE) {
+    function setRheaGeToken(address _rheaGeToken) external override onlyRole(GOVERNOR_ROLE) onlyRouter {
         require(
             _rheaGeToken != address(0),
             "RGRegistry::generateBatch: 0x0 address passed as rheaGeTokenAddress"
         );
         rheaGeToken = _rheaGeToken;
+    }
+
+    function getRegisteredBatch(string calldata serialNumber) external view override returns (CCBatch memory) {
+        return registeredBatches[serialNumber];
     }
 }

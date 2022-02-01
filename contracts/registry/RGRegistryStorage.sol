@@ -1,24 +1,19 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.11;
 
+import "../utils/OnlyRouterAccess.sol";
+import "../access/RoleAware.sol";
+import "./IRGRegistryStorage.sol";
 
-contract RGRegistryStorage {
-    // TODO: which fields do we need here ??
-    struct CCBatch {
-        string serialNumber;
-        uint256 projectId;
-        string vintage;
-        string creditType;
-        uint256 units;
-        address owner;
-        bool created;
-    }
 
-    address public rheaGeToken;
+contract RGRegistryStorage is RoleAware, OnlyRouterAccess, IRGRegistryStorage {
+    bool public override initialized = false;
+
+    address public override rheaGeToken;
 
     mapping(string => CCBatch) public registeredBatches;
-    mapping(address => uint256) public retiredBalances;
-    uint256 public totalSupplyRetired;
+    mapping(address => uint256) public override retiredBalances;
+    uint256 public override totalSupplyRetired;
 
-    address public tokenValidator;
+    address public override tokenValidator;
 }

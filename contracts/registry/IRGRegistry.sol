@@ -1,40 +1,16 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.11;
 
+import "../structs/CCBatchStruct.sol";
 
-interface IRGRegistry {
-    // TODO: which are indexed ??
-    event BatchGenerated(
-        string serialNumber,
-        uint256 projectId,
-        string vintage,
-        string creditType,
-        uint256 units,
-        address indexed batchOwner,
-        address indexed certifier
-    );
 
-    event BatchUpdated(
-        string serialNumber,
-        uint256 projectId,
-        string vintage,
-        string creditType,
-        uint256 units,
-        address indexed batchOwner,
-        address indexed certifier
-    );
+interface IRGRegistry is CCBatchStruct {
 
-    // TODO: do we need operator here and should we keep this name ??
-    event InitialPurchase(
-        address indexed buyer,
-        uint256 amount
-    );
-
-    // TODO: naming ??
-    event OffsetAndBurned(
-        address indexed holder,
-        uint256 amount
-    );
+    function init(
+        address _rheaGeToken,
+        address _roleManager,
+        address _tokenValidator
+    ) external;
 
     function generateBatch(
         string calldata serialNumber,
@@ -63,4 +39,6 @@ interface IRGRegistry {
         uint256 amount,
         bool withdrawAll
     ) external;
+
+    function getRegisteredBatch(string calldata serialNumber) external view returns (CCBatch memory);
 }
