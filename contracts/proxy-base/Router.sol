@@ -21,7 +21,6 @@ import "../access/RoleAware.sol";
  * contracts!
  */
 contract Router is RoleAware {
-    bytes32 private constant GOVERNOR_ROLE_NAME = "governor";
     Resolver public resolver;
 
     /**
@@ -68,7 +67,7 @@ contract Router is RoleAware {
      * DIRECTLY, and not through an implementation interface it is used with!
      * @param _resolver address of {Resolver} contract to be set for {Router}
      */
-    function setResolver(address _resolver) public onlyRole(GOVERNOR_ROLE_NAME) {
+    function setResolver(address _resolver) public onlyRole(GOVERNOR_ROLE) {
         require(
             _resolver != address(0),
             "_resolver is passed as 0 address at Router.setResolver()."

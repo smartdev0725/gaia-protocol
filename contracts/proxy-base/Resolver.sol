@@ -15,7 +15,6 @@ import "../access/RoleAware.sol";
  * throughout the system.
  */
 contract Resolver is RoleAware {
-    bytes32 private constant GOVERNOR_ROLE_NAME = "governor";
     // mapping between first 4 bytes of keccak and contract address
     mapping (bytes4 => address) internal pointers;
 
@@ -78,7 +77,7 @@ contract Resolver is RoleAware {
     function bulkRegister(
         bytes32[] memory keccakSignatures,
         address[] memory destinations
-    ) public onlyRole(GOVERNOR_ROLE_NAME) {
+    ) public onlyRole(GOVERNOR_ROLE) {
         require(
             keccakSignatures.length == destinations.length,
             "keccak signatures should have same length as destinations"
@@ -95,7 +94,7 @@ contract Resolver is RoleAware {
      * @param destination contract address that signature will point to
      * See {_register}
      */
-    function register(bytes32 keccakSignature, address destination) public onlyRole(GOVERNOR_ROLE_NAME) {
+    function register(bytes32 keccakSignature, address destination) public onlyRole(GOVERNOR_ROLE) {
         _register(keccakSignature, destination);
     }
 
@@ -107,7 +106,7 @@ contract Resolver is RoleAware {
     function bulkUpdate(
         bytes32[] memory keccakSignatures,
         address[] memory destinations
-    ) public onlyRole(GOVERNOR_ROLE_NAME) {
+    ) public onlyRole(GOVERNOR_ROLE) {
         require(
             keccakSignatures.length == destinations.length,
             "keccak signatures should have same length as destinations"
@@ -123,7 +122,7 @@ contract Resolver is RoleAware {
      * @param keccakSignature signature to be updated
      * @param destination contract address that signature will point to
      */
-    function updateSignature(bytes32 keccakSignature, address destination) public onlyRole(GOVERNOR_ROLE_NAME) {
+    function updateSignature(bytes32 keccakSignature, address destination) public onlyRole(GOVERNOR_ROLE) {
         _updateSignature(keccakSignature, destination);
     }
 
@@ -131,7 +130,7 @@ contract Resolver is RoleAware {
      * @dev Function to remove single `keccakSignature`.
      * @param keccakSignature signature to be removed
      */
-    function removeSignature(bytes32 keccakSignature) public onlyRole(GOVERNOR_ROLE_NAME) {
+    function removeSignature(bytes32 keccakSignature) public onlyRole(GOVERNOR_ROLE) {
         bytes4 sig = bytes4(keccakSignature);
         if (pointers[sig] != address(0)) {
             pointers[sig] = address(0);
