@@ -145,7 +145,7 @@ contract RGRegistry is RoleAware, IRGRegistry {
         // TODO: think on the archi of Payments and where should each function be
         //  this contract vs PaymentManager
         uint256 toWithdrawAmt;
-        // this returns if token is ETH or now + validates
+        // this returns if token is ETH or not + validates
         if (ITokenValidator(tokenValidator).validateToken(token)) {
             toWithdrawAmt = withdrawAll && amount == 0
                 ? address(this).balance
