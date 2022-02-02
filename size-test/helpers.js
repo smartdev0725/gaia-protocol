@@ -1,4 +1,5 @@
 import fs from 'fs';
+// eslint-disable-next-line import/no-extraneous-dependencies
 import { strip0x } from '@nomisma/nomisma-smart-contract-helpers';
 
 const DEPLOYMENT_SIZE_LIMIT = (2 ** 14) + (2 ** 13);
