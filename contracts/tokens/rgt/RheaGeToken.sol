@@ -5,7 +5,7 @@ import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "./IRheaGeToken.sol";
 import "../../access/RoleAware.sol";
 
-
+// TODO: possibly add pausing logic
 contract RheaGeToken is RoleAware, ERC20, IRheaGeToken {
     // TODO: do we need decimals to be set? if yes - we need to override all logic related to it
     // TODO: since it is not present
