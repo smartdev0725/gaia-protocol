@@ -17,9 +17,9 @@ const {
 
 
 const RheaGe = artifacts.require('./RheaGeToken.sol');
-const Registry = artifacts.require('./RheaGeRegistry.sol');
+const Registry = artifacts.require('./RGRegistry.sol');
 const RoleManager = artifacts.require('./RoleManager.sol');
-const PaymentManager = artifacts.require('./PaymentManager.sol');
+const PaymentManager = artifacts.require('./TokenValidator.sol');
 const Token = artifacts.require('./ERC20Mock.sol');
 
 
@@ -135,7 +135,7 @@ contract('Full Cycle Test', ([
         let payTokenBalBefore;
         if (token === this.payToken.address) {
           payTokenBalBefore = await this.payToken.balanceOf(user);
-          await this.payToken.approve(this.payManager.address, payAmount, { from: user });
+          await this.payToken.approve(this.registry.address, payAmount, { from: user });
         } else {
           payTokenBalBefore = new BigNumber(
             await web3.eth.getBalance(user)

@@ -6,6 +6,8 @@ import "./IRheaGeToken.sol";
 import "../../access/RoleAware.sol";
 
 
+// TODO: can and should we make token not tied to RoleManager ??
+// TODO: should we make this token pausable ??
 contract RheaGeToken is RoleAware, ERC20, IRheaGeToken {
     // TODO: do we need decimals to be set? if yes - we need to override all logic related to it
     // TODO: since it is not present
