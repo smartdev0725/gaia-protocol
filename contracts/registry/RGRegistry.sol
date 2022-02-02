@@ -6,11 +6,29 @@ import "../access/RoleAware.sol";
 import "../tokens/rgt/IRheaGeToken.sol";
 import "./IRGRegistry.sol";
 import "../tokens/validation/ITokenValidator.sol";
-import "./RGRegistryStorage.sol";
 
 
-contract RGRegistry is RoleAware, RGRegistryStorage, IRGRegistry {
+contract RGRegistry is RoleAware, IRGRegistry {
     using SafeERC20 for IERC20;
+
+    // TODO: which fields do we need here ??
+    struct CCBatch {
+        string serialNumber;
+        uint256 projectId;
+        string vintage;
+        string creditType;
+        uint256 units;
+        address owner;
+        bool created;
+    }
+
+    address public rheaGeToken;
+
+    mapping(string => CCBatch) public registeredBatches;
+    mapping(address => uint256) public retiredBalances;
+    uint256 public totalSupplyRetired;
+
+    address public tokenValidator;
 
     constructor(
         address _rheaGeToken,
