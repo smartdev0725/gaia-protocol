@@ -5,7 +5,6 @@ import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "../access/RoleAware.sol";
 import "../tokens/rgt/IRheaGeToken.sol";
 import "./IRGRegistry.sol";
-import "../tokens/validation/ITokenValidator.sol";
 
 
 contract RGRegistry is RoleAware, IRGRegistry {
@@ -28,18 +27,16 @@ contract RGRegistry is RoleAware, IRGRegistry {
     mapping(address => uint256) public retiredBalances;
     uint256 public totalSupplyRetired;
 
-    address public tokenValidator;
-
     constructor(
         address _rheaGeToken,
         address _roleManager,
-        address _tokenValidator
+        address _rgtReceiver
     ) {
         require(_rheaGeToken != address(0), "RGRegistry: zero address passed as _rheaGeToken");
-        require(_tokenValidator != address(0), "RGRegistry: zero address passed as _paymentManager");
+        require(_rgtReceiver != address(0), "RGRegistry: zero address passed as _paymentManager");
         rheaGeToken = _rheaGeToken;
         setRoleManager(_roleManager);
-        tokenValidator = _tokenValidator;
+        rgtReceiver = _rgtReceiver;
     }
 
     function generateBatch(
@@ -48,7 +45,8 @@ contract RGRegistry is RoleAware, IRGRegistry {
         string calldata vintage,
         string calldata creditType,
         uint256 units,
-        address batchOwner
+        address batchOwner, // TODO: is this needed at all ??
+        address mintTo
     ) external override onlyRole(MINTER_ROLE) {
         require(!registeredBatches[serialNumber].created, "RGRegistry::generateBatch: Batch already created");
 
@@ -72,30 +70,7 @@ contract RGRegistry is RoleAware, IRGRegistry {
             msg.sender
         );
 
-        IRheaGeToken(rheaGeToken).mint(address(this), units);
-    }
-
-    // TODO: who calls this function? who is msg.sender ?? how should we guard it if at all ??
-    function purchase(
-        address paymentToken,
-        uint256 paymentAmt,
-        uint256 rgtAmt
-    ) external payable override {
-        // TODO: what other checks do we need ??
-        // TODO: what other logic do we need here ??
-        collectPayment(
-            msg.sender,
-            address(this),
-            paymentToken,
-            paymentAmt
-        );
-
-        require(
-            IRheaGeToken(rheaGeToken).transfer(msg.sender, rgtAmt),
-            "RGRegistry::purchase: RheaGeToken::transfer failed"
-        );
-
-        emit InitialPurchase(msg.sender, rgtAmt);
+        IRheaGeToken(rheaGeToken).mint(mintTo, units);
     }
 
     function offset(
@@ -107,59 +82,7 @@ contract RGRegistry is RoleAware, IRGRegistry {
             totalSupplyRetired += carbonTonAmt;
         }
 
-        emit OffsetAndBurned(msg.sender, carbonTonAmt);
-    }
-
-    // TODO: should we make a better guard or none at all ??
-    // TODO: this function should probably be in Registry
-    function collectPayment(
-        address from,
-        address to,
-        address tokenAddress,
-        uint256 amount
-    ) internal {
-        bool isEther = ITokenValidator(tokenValidator).validateToken(tokenAddress);
-        uint256 paymentAmt = isEther ? msg.value : amount;
-        require(paymentAmt != 0, "RGRegistry::collectPayment: no payment provided");
-
-        if (isEther) {
-            require(
-                msg.value == amount,
-                "RGRegistry::collectPayment: incorrect amount has been passed with ETH purchase"
-            );
-        } else {
-            require(
-                msg.value == 0,
-                "RGRegistry::collectPayment: ETH has been sent with an ERC20 purchase"
-            );
-            IERC20(tokenAddress).safeTransferFrom(from, to, paymentAmt);
-        }
-    }
-
-    function withdrawPaidFunds(
-        address to,
-        address token,
-        uint256 amount,
-        bool withdrawAll
-    ) external override onlyRole(GOVERNOR_ROLE) {
-        // TODO: think on the archi of Payments and where should each function be
-        //  this contract vs PaymentManager
-        uint256 toWithdrawAmt;
-        // this returns if token is ETH or not + validates
-        if (ITokenValidator(tokenValidator).validateToken(token)) {
-            toWithdrawAmt = withdrawAll && amount == 0
-                ? address(this).balance
-                : amount;
-
-            (bool success, ) = to.call{value: toWithdrawAmt}("");
-            require(success, "RheaGeRegistry::withdrawPaidFunds: ETH transfer failed");
-        } else {
-            toWithdrawAmt = withdrawAll && amount == 0
-                ? IERC20(token).balanceOf(address(this))
-                : amount;
-
-            IERC20(token).safeTransfer(to, toWithdrawAmt);
-        }
+        emit Offset(msg.sender, carbonTonAmt);
     }
 
     function setRheaGeToken(address _rheaGeToken) external override onlyRole(GOVERNOR_ROLE) {

@@ -21,7 +21,6 @@ contract RoleManager is IRoleManager {
     bytes32 public constant GOVERNOR_ROLE = "GOVERNOR_ROLE";
     bytes32 public constant MINTER_ROLE = "MINTER_ROLE";
     bytes32 public constant BURNER_ROLE = "BURNER_ROLE";
-    bytes32 public constant OPERATOR_ROLE = "OPERATOR_ROLE";
 
     /**
      * @notice Event fired upon adding a role for an address.
