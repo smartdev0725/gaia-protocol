@@ -9,8 +9,8 @@ import {
 const rolesMap = {
   GOVERNOR_ROLE: 'GOVERNOR_ROLE',
   MINTER_ROLE: 'MINTER_ROLE',
-  OPERATOR_ROLE: 'OPERATOR_ROLE',
   BURNER_ROLE: 'BURNER_ROLE',
+  OPERATOR_ROLE: 'OPERATOR_ROLE',
 };
 
 export const getRoleBytes32 = (roleName) => {
