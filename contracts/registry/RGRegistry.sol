@@ -126,6 +126,7 @@ contract RGRegistry is RoleAware, IRGRegistry {
     ) internal {
         bool isEther = ITokenValidator(tokenValidator).validateToken(tokenAddress);
         uint256 paymentAmt = isEther ? msg.value : amount;
+        // TODO: if payment with zero is decided to stay here - think if this line is needed !!
         require(paymentAmt != 0, "RGRegistry::collectPayment: no payment provided");
 
         if (isEther) {
