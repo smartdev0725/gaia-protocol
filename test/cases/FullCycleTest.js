@@ -3,7 +3,6 @@ import { getDefBatch } from '../helpers/batches';
 import { deployRegistry } from '../helpers/registry';
 import { deployRheaGeToken } from '../helpers/rgt';
 import { getTxCostInETH } from '../helpers/tx';
-import { tokenName, tokenSymbol } from './RheaGeTokenBasicTest';
 import { roleNames } from '../helpers/roles';
 
 require('chai')

@@ -6,7 +6,6 @@ import { deployRegistry } from '../helpers/registry';
 import { deployRheaGeToken } from '../helpers/rgt';
 import { roleNames } from '../helpers/roles';
 import { getTxCostInETH } from '../helpers/tx';
-import { tokenName, tokenSymbol } from './RheaGeTokenBasicTest';
 
 require('chai')
   .use(require('chai-as-promised'))
