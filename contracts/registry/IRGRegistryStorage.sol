@@ -39,8 +39,6 @@ interface IRGRegistryStorage is CCBatchStruct {
     );
 
     // storage getters
-    function initialized() external view returns (bool);
-
     function rheaGeToken() external view returns (address);
 
     function totalSupplyRetired() external view returns (uint256);

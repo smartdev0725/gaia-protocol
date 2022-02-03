@@ -1,7 +1,8 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.11;
 
-import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import "@openzeppelin/contracts-upgradeable/token/ERC20/utils/SafeERC20Upgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/token/ERC20/IERC20Upgradeable.sol";
 import "../access/RoleAware.sol";
 import "../tokens/rgt/IRheaGeToken.sol";
 import "./IRGRegistry.sol";
@@ -10,24 +11,20 @@ import "./RGRegistryStorage.sol";
 
 
 contract RGRegistry is RGRegistryStorage, IRGRegistry {
-    using SafeERC20 for IERC20;
+    // TODO: remove this if payments are not supported
+    using SafeERC20Upgradeable for IERC20Upgradeable;
 
     function init(
         address _rheaGeToken,
         address _roleManager,
         address _tokenValidator
     // TODO: proxy: figure out a good way to make this only callable by a Router
-    ) external override onlyRouter {
-        require(
-            initialized == false,
-            "RGRegistry: has already been initialized"
-        );
+    ) external override onlyRouter initializer {
         require(_rheaGeToken != address(0), "RGRegistry: zero address passed as _rheaGeToken");
         require(_tokenValidator != address(0), "RGRegistry: zero address passed as _paymentManager");
         rheaGeToken = _rheaGeToken;
         setRoleManager(_roleManager);
         tokenValidator = _tokenValidator;
-        initialized = true;
     }
 
     function generateBatch(
@@ -120,7 +117,7 @@ contract RGRegistry is RGRegistryStorage, IRGRegistry {
                 msg.value == 0,
                 "RGRegistry::collectPayment: ETH has been sent with an ERC20 purchase"
             );
-            IERC20(tokenAddress).safeTransferFrom(from, to, paymentAmt);
+            IERC20Upgradeable(tokenAddress).safeTransferFrom(from, to, paymentAmt);
         }
     }
 
@@ -143,10 +140,10 @@ contract RGRegistry is RGRegistryStorage, IRGRegistry {
             require(success, "RheaGeRegistry::withdrawPaidFunds: ETH transfer failed");
         } else {
             toWithdrawAmt = withdrawAll && amount == 0
-                ? IERC20(token).balanceOf(address(this))
+                ? IERC20Upgradeable(token).balanceOf(address(this))
                 : amount;
 
-            IERC20(token).safeTransfer(to, toWithdrawAmt);
+            IERC20Upgradeable(token).safeTransfer(to, toWithdrawAmt);
         }
     }
 

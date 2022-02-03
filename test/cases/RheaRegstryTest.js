@@ -532,4 +532,9 @@ contract('RheaGeRegistry Test', ([
     const tokenAddressReSet = await this.registry.rheaGeToken();
     tokenAddressReSet.should.be.equal(this.rheaGe.address);
   });
+
+  it('should NOT initialize twice', async function () {
+    await this.registry.init(this.rheaGe.address, this.roleManager.address, this.tokenValidator.address)
+      .should.be.rejectedWith('Initializable: contract is already initialized');
+  });
 });

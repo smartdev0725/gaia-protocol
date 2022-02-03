@@ -5,10 +5,15 @@ import "../utils/OnlyRouterAccess.sol";
 import "../access/RoleAware.sol";
 import "./IRGRegistryStorage.sol";
 import "../proxy-base/Resolvable.sol";
+import "@openzeppelin/contracts-upgradeable/utils/ContextUpgradeable.sol";
 
 
-contract RGRegistryStorage is RoleAware, Resolvable, OnlyRouterAccess, IRGRegistryStorage {
-    bool public override initialized = false;
+contract RGRegistryStorage is
+    RoleAware,
+    Resolvable,
+    ContextUpgradeable,
+    OnlyRouterAccess,
+    IRGRegistryStorage {
 
     address public override rheaGeToken;
 
