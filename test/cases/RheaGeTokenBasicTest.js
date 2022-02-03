@@ -2,6 +2,7 @@ import {
   getChaiBN,
   BigNumber,
 } from '@nomisma/nomisma-smart-contract-helpers';
+import { deployRheaGeToken } from '../helpers/rgt';
 
 require('chai')
   .use(require('chai-as-promised'))
@@ -9,10 +10,9 @@ require('chai')
   .should();
 
 
-const RheaGe = artifacts.require('./RheaGeToken.sol');
 const RoleManager = artifacts.require('./RoleManager.sol');
 
-export const tokenName = 'RheaGe'; // TODO: figure out the name
+export const tokenName = 'RheaGe Token'; // TODO: figure out the name
 export const tokenSymbol = 'RGT';
 
 
@@ -23,10 +23,10 @@ contract('RheaGeToken Basic Tests', ([
 ]) => {
   before(async function () {
     const roleManager = await RoleManager.new([ governor ], 1);
-    this.token = await RheaGe.new(tokenName, tokenSymbol, roleManager.address);
+    this.token = await deployRheaGeToken(roleManager.address, governor);
   });
 
-  it('should set initial storage', async function () {
+  it('should set initial storage correctly', async function () {
     const nameFromSc = await this.token.name();
     const symbolFromSc = await this.token.symbol();
     const totalSupply = await this.token.totalSupply();

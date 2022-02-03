@@ -3,6 +3,7 @@ import {
   BigNumber,
 } from '@nomisma/nomisma-smart-contract-helpers';
 import { deployRegistry } from '../helpers/registry';
+import { deployRheaGeToken } from '../helpers/rgt';
 import { roleNames } from '../helpers/roles';
 import { getTxCostInETH } from '../helpers/tx';
 import { tokenName, tokenSymbol } from './RheaGeTokenBasicTest';
@@ -13,8 +14,6 @@ require('chai')
   .should();
 
 
-const RheaGe = artifacts.require('./RheaGeToken.sol');
-const Registry = artifacts.require('./RGRegistry.sol');
 const RoleManager = artifacts.require('./RoleManager.sol');
 const TokenValidator = artifacts.require('./TokenValidator.sol');
 const Token = artifacts.require('./ERC20Mock.sol');
@@ -50,12 +49,7 @@ contract('RheaGeRegistry Test', ([
   before(async function () {
     this.roleManager = await RoleManager.new([ governor ], '1');
     this.payToken = await Token.new('ERC20Mock', 'ETM', buyer1);
-    this.rheaGe = await RheaGe.new(
-      tokenName,
-      tokenSymbol,
-      this.roleManager.address,
-      { from: governor }
-    );
+    this.rheaGe = await deployRheaGeToken(this.roleManager.address, governor);
 
     this.tokenValidator = await TokenValidator.new(this.roleManager.address, etherAddress);
 
@@ -365,12 +359,7 @@ contract('RheaGeRegistry Test', ([
     before(async function () {
       this.roleManager = await RoleManager.new([ governor ], '1');
       this.payToken = await Token.new('ERC20Mock', 'ETM', buyer1);
-      this.rheaGe = await RheaGe.new(
-        tokenName,
-        tokenSymbol,
-        this.roleManager.address,
-        { from: governor }
-      );
+      this.rheaGe = await deployRheaGeToken(this.roleManager.address, governor);
 
       this.tokenValidator = await TokenValidator.new(this.roleManager.address, etherAddress);
 

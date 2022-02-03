@@ -1,6 +1,7 @@
 import { BigNumber, getChaiBN } from '@nomisma/nomisma-smart-contract-helpers';
 import { getDefBatch } from '../helpers/batches';
 import { deployRegistry } from '../helpers/registry';
+import { deployRheaGeToken } from '../helpers/rgt';
 import { getTxCostInETH } from '../helpers/tx';
 import { tokenName, tokenSymbol } from './RheaGeTokenBasicTest';
 import { roleNames } from '../helpers/roles';
@@ -17,8 +18,6 @@ const {
 } = roleNames;
 
 
-const RheaGe = artifacts.require('./RheaGeToken.sol');
-const Registry = artifacts.require('./RGRegistry.sol');
 const RoleManager = artifacts.require('./RoleManager.sol');
 const PaymentManager = artifacts.require('./TokenValidator.sol');
 const Token = artifacts.require('./ERC20Mock.sol');
@@ -41,12 +40,7 @@ contract('Full Cycle Test', ([
     this.roleManager = await RoleManager.new([ governor ], '1');
     this.payToken = await Token.new('ERC20Mock', 'ETM', buyer1);
 
-    this.rgt = await RheaGe.new(
-      tokenName,
-      tokenSymbol,
-      this.roleManager.address,
-      { from: governor }
-    );
+    this.rgt = await deployRheaGeToken(this.roleManager.address, governor);
 
     this.tokenValidator = await PaymentManager.new(this.roleManager.address, etherAddress);
 
