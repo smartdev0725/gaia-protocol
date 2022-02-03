@@ -22,14 +22,19 @@ contract('RheaGeToken Basic Tests', ([
   client2,
 ]) => {
   before(async function () {
-    const roleManager = await RoleManager.new([ governor ], 1);
-    this.token = await deployRheaGeToken(roleManager.address, governor);
+    this.roleManager = await RoleManager.new([ governor ], 1);
+    this.rheaGe = await deployRheaGeToken(this.roleManager.address, governor);
+  });
+
+  it('should NOT initialize twice', async function () {
+    await this.rheaGe.init(this.roleManager.address)
+      .should.be.rejectedWith('Initializable: contract is already initialized');
   });
 
   it('should set initial storage correctly', async function () {
-    const nameFromSc = await this.token.name();
-    const symbolFromSc = await this.token.symbol();
-    const totalSupply = await this.token.totalSupply();
+    const nameFromSc = await this.rheaGe.name();
+    const symbolFromSc = await this.rheaGe.symbol();
+    const totalSupply = await this.rheaGe.totalSupply();
 
     assert.equal(nameFromSc, tokenName);
     assert.equal(symbolFromSc, tokenSymbol);
@@ -37,7 +42,7 @@ contract('RheaGeToken Basic Tests', ([
   });
 
   it('should NOT transfer before minting', async function () {
-    await this.token.transfer(client2, new BigNumber(10), { from: client1 })
+    await this.rheaGe.transfer(client2, new BigNumber(10), { from: client1 })
       .should.be.rejectedWith('ERC20: transfer amount exceeds balance');
   });
 
