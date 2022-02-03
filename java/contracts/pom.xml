@@ -16,7 +16,7 @@
             <resource>
                 <directory>../../artifacts/contracts</directory>
                 <includes>
-                    <include>*.json</include>
+                    <include>**/*.json</include>
                 </includes>
             </resource>
         </resources>
