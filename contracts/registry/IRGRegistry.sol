@@ -25,7 +25,8 @@ interface IRGRegistry {
         string calldata vintage,
         string calldata creditType,
         uint256 units,
-        address batchOwner
+        address batchOwner,
+        address mintTo
     ) external;
 
     function offset(

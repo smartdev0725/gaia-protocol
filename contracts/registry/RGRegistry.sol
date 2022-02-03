@@ -29,14 +29,11 @@ contract RGRegistry is RoleAware, IRGRegistry {
 
     constructor(
         address _rheaGeToken,
-        address _roleManager,
-        address _rgtReceiver
+        address _roleManager
     ) {
         require(_rheaGeToken != address(0), "RGRegistry: zero address passed as _rheaGeToken");
-        require(_rgtReceiver != address(0), "RGRegistry: zero address passed as _paymentManager");
         rheaGeToken = _rheaGeToken;
         setRoleManager(_roleManager);
-        rgtReceiver = _rgtReceiver;
     }
 
     function generateBatch(

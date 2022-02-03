@@ -49,7 +49,6 @@ contract('RheaGeRegistry Test', ([
     this.registry = await Registry.new(
       this.rheaGe.address,
       this.roleManager.address,
-      rgtReceiver,
       { from: governor }
     );
 
@@ -69,6 +68,7 @@ contract('RheaGeRegistry Test', ([
 
     await this.registry.generateBatch(
       ...Object.values(batchDataBase),
+      rgtReceiver,
       { from: minter }
     );
   });
@@ -83,6 +83,7 @@ contract('RheaGeRegistry Test', ([
 
       await this.registry.generateBatch(
         ...Object.values(newBatch),
+        rgtReceiver,
         { from: minter }
       ).should.be.fulfilled;
 
@@ -117,11 +118,13 @@ contract('RheaGeRegistry Test', ([
 
       await this.registry.generateBatch(
         ...Object.values(newBatch),
+        rgtReceiver,
         { from: minter }
       ).should.be.fulfilled;
 
       await this.registry.generateBatch(
         ...Object.values(newBatch),
+        rgtReceiver,
         { from: minter }
       ).should.be.rejectedWith('RGRegistry::generateBatch: Batch already created');
     });
@@ -140,6 +143,7 @@ contract('RheaGeRegistry Test', ([
 
       await this.registry.generateBatch(
         ...Object.values(newBatch),
+        rgtReceiver,
         { from: minter }
       ).should.be.fulfilled;
 
