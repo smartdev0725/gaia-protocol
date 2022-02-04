@@ -14,24 +14,7 @@ interface IRGRegistry {
         address indexed certifier
     );
 
-    event BatchUpdated(
-        string serialNumber,
-        uint256 projectId,
-        string vintage,
-        string creditType,
-        uint256 units,
-        address indexed batchOwner,
-        address indexed certifier
-    );
-
-    // TODO: do we need operator here and should we keep this name ??
-    event InitialPurchase(
-        address indexed buyer,
-        uint256 amount
-    );
-
-    // TODO: naming ??
-    event OffsetAndBurned(
+    event Offset(
         address indexed holder,
         uint256 amount
     );
@@ -42,25 +25,13 @@ interface IRGRegistry {
         string calldata vintage,
         string calldata creditType,
         uint256 units,
-        address batchOwner
+        address batchOwner,
+        address mintTo
     ) external;
-
-    function purchase(
-        address paymentToken,
-        uint256 paymentAmt,
-        uint256 rgtAmt
-    ) external payable;
 
     function offset(
         uint256 carbonTonAmt
     ) external;
 
     function setRheaGeToken(address _rheaGeToken) external;
-
-    function withdrawPaidFunds(
-        address to,
-        address token,
-        uint256 amount,
-        bool withdrawAll
-    ) external;
 }
