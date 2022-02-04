@@ -1,11 +1,9 @@
 import { getChaiBN } from '@nomisma/nomisma-smart-contract-helpers';
 import {
-    setupRoleManager,
-} from '../helpers/role-manager';
-import {
     roleNames,
 } from '../helpers/roles';
 
+const RoleManager = artifacts.require('./RoleManager.sol');
 
 const {
     GOVERNOR_ROLE,
@@ -39,7 +37,7 @@ const checkRoles = async (
     );
 };
 
-contract.only('RoleManager', ([
+contract('RoleManager', ([
     roleManager1,
     roleManager2,
     roleManager3,
@@ -49,24 +47,28 @@ contract.only('RoleManager', ([
     operatorAcc2,
 ]) => {
     it('should NOT be deployed with less governor accounts then needed confirmations', async () => {
-        await setupRoleManager(
+        const confirmationsRequired = 3;
+        await RoleManager.new(
             [roleManager1],
-            [],
-            3
+            confirmationsRequired
         ).should.be.rejectedWith('RoleManager: Not enough governors supplied for the amount of required confirmations');
     });
 
     it('should NOT deploy when passing the same governor address multiple times', async () => {
-        await setupRoleManager(
+        const confirmationsRequired = 3;
+        await RoleManager.new(
             [roleManager1, roleManager2, roleManager1],
-            [],
-            3
+            confirmationsRequired
         ).should.be.rejectedWith('revert');
     });
 
     describe('#appointGovernors #addRoleForAddress(-es) #isGovernor', () => {
         beforeEach(async function () {
-            this.roleManager = await setupRoleManager([roleManager1, roleManager2, roleManager3], []); // TODO move to before()?
+            const confirmationsRequired = 1;
+            this.roleManager = await RoleManager.new(
+                [roleManager1, roleManager2, roleManager3],
+                confirmationsRequired
+            );
         });
 
         it('should reject if try to add/remove governor by addRoleForAddress/removeRoleForAddress', async function () {
