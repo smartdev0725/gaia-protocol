@@ -20,6 +20,4 @@ contract RGRegistryStorage is
     mapping(string => CCBatch) public registeredBatches;
     mapping(address => uint256) public override retiredBalances;
     uint256 public override totalSupplyRetired;
-
-    address public override tokenValidator;
 }

@@ -8,8 +8,7 @@ interface IRGRegistry is CCBatchStruct {
 
     function init(
         address _rheaGeToken,
-        address _roleManager,
-        address _tokenValidator
+        address _roleManager
     ) external;
 
     function generateBatch(

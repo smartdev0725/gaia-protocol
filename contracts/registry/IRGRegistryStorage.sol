@@ -16,24 +16,8 @@ interface IRGRegistryStorage is CCBatchStruct {
         address indexed certifier
     );
 
-    event BatchUpdated(
-        string serialNumber,
-        uint256 projectId,
-        string vintage,
-        string creditType,
-        uint256 units,
-        address indexed batchOwner,
-        address indexed certifier
-    );
-
-    // TODO: do we need operator here and should we keep this name ??
-    event InitialPurchase(
-        address indexed buyer,
-        uint256 amount
-    );
-
     // TODO: naming ??
-    event OffsetAndBurned(
+    event Offset(
         address indexed holder,
         uint256 amount
     );
@@ -42,8 +26,6 @@ interface IRGRegistryStorage is CCBatchStruct {
     function rheaGeToken() external view returns (address);
 
     function totalSupplyRetired() external view returns (uint256);
-
-    function tokenValidator() external view returns (address);
 
     function retiredBalances(address) external view returns (uint256);
 }

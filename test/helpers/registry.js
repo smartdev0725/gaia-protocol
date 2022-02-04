@@ -9,7 +9,6 @@ const RegistryRouter = artifacts.require('./RGRegistryRouter.sol');
 export const deployRegistry = async (
   rgToken,
   roleManager,
-  tokenValidator,
   governor
 ) => {
   const regImpl = await Registry.new();
@@ -22,7 +21,6 @@ export const deployRegistry = async (
     rgToken,
     regResolver.address,
     roleManager,
-    tokenValidator,
     { from: governor }
   );
 

@@ -186,7 +186,7 @@ contract('RheaGeRegistry Test', ([
   });
 
   it('should NOT initialize twice', async function () {
-    await this.registry.init(this.rheaGe.address, this.roleManager.address, this.tokenValidator.address)
+    await this.registry.init(this.rheaGe.address, this.roleManager.address)
       .should.be.rejectedWith('Initializable: contract is already initialized');
   });
 });

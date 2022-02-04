@@ -11,7 +11,7 @@ contract RGRegistryRouter is Router, Delegator {
     bytes4 internal constant INIT_SIG = bytes4(
         keccak256(
             bytes(
-                "init(address,address,address)"
+                "init(address,address)"
             )
         )
     );
@@ -19,8 +19,7 @@ contract RGRegistryRouter is Router, Delegator {
     constructor(
         address _rheaGeToken,
         address _resolver,
-        address _roleManager,
-        address _tokenValidator
+        address _roleManager
     ) {
         initRouter(_resolver, _roleManager);
 
@@ -29,8 +28,7 @@ contract RGRegistryRouter is Router, Delegator {
         bytes memory args = abi.encodeWithSelector(
             INIT_SIG,
             _rheaGeToken,
-            _roleManager,
-            _tokenValidator
+            _roleManager
         );
 
         delegate(
