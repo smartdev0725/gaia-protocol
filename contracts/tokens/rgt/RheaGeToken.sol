@@ -7,7 +7,7 @@ import "../../access/RoleAware.sol";
 
 
 // TODO: can and should we make token not tied to RoleManager ??
-// TODO: should we make this token pausable ??
+// TODO: should we make this token pausable ?? - NO we need to restrict only individual addresses
 contract RheaGeToken is RoleAware, ERC20, IRheaGeToken {
     // TODO: do we need decimals to be set? if yes - we need to override all logic related to it
     // TODO: since it is not present
@@ -20,10 +20,12 @@ contract RheaGeToken is RoleAware, ERC20, IRheaGeToken {
     }
 
     function mint(address to, uint256 amount) public override onlyRole(MINTER_ROLE) {
+        require(amount > 0, "ERC20: minting zero amount");
         _mint(to, amount);
     }
 
     function burn(address account, uint256 amount) public override onlyRole(BURNER_ROLE) {
+        require(amount > 0, "ERC20: burning zero amount");
         _burn(account, amount);
     }
 }
