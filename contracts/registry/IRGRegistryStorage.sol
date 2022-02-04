@@ -7,16 +7,20 @@ import "../structs/Structs.sol";
 interface IRGRegistryStorage is Structs {
     event BatchGenerated(
         string serialNumber,
-        uint256 indexed projectId,
+        uint256 projectId,
         string indexed vintage,
         string indexed creditType,
         uint256 quantity,
         address initialRgtOwner,
-        address certifier
+        address indexed certifier
     );
 
     event ProjectAdded(
-
+        uint256 id,
+        string name,
+        string indexed projectType,
+        string certifications,
+        address indexed certifier
     );
 
     event Retired(

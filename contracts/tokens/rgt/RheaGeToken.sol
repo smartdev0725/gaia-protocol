@@ -11,8 +11,6 @@ import "../../utils/OnlyRouterAccess.sol";
 // TODO: should we make this token pausable ??
 contract RheaGeToken is RoleAware, ERC20Upgradeable, OnlyRouterAccess, IRheaGeToken {
 
-    // TODO: do we need decimals to be set? if yes - we need to override all logic related to it
-    // TODO: since it is not present
     function init(
         address _roleManager
     ) external override onlyRouter initializer {

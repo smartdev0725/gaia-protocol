@@ -17,11 +17,12 @@ const RoleManager = artifacts.require('./RoleManager.sol');
 const {
   MINTER_ROLE,
   BURNER_ROLE,
+  CERTIFIER_ROLE,
 } = roleNames;
 
 contract('RheaGeRegistry Test', ([
   governor,
-  minter,
+  certifier,
   offsetter1,
   rheaGeTokenMock,
   rgtReceiver,
@@ -46,12 +47,12 @@ contract('RheaGeRegistry Test', ([
 
     await this.roleManager.addRolesForAddresses(
       [
-        minter,
+        certifier,
         this.registry.address,
         this.registry.address,
       ],
       [
-        MINTER_ROLE,
+        CERTIFIER_ROLE,
         MINTER_ROLE,
         BURNER_ROLE,
       ],
@@ -61,7 +62,7 @@ contract('RheaGeRegistry Test', ([
     await this.registry.generateBatch(
       ...Object.values(batchDataBase),
       rgtReceiver,
-      { from: minter }
+      { from: certifier }
     );
   });
 
@@ -76,7 +77,7 @@ contract('RheaGeRegistry Test', ([
       await this.registry.generateBatch(
         ...Object.values(newBatch),
         rgtReceiver,
-        { from: minter }
+        { from: certifier }
       ).should.be.fulfilled;
 
       const {
@@ -111,13 +112,13 @@ contract('RheaGeRegistry Test', ([
       await this.registry.generateBatch(
         ...Object.values(newBatch),
         rgtReceiver,
-        { from: minter }
+        { from: certifier }
       ).should.be.fulfilled;
 
       await this.registry.generateBatch(
         ...Object.values(newBatch),
         rgtReceiver,
-        { from: minter }
+        { from: certifier }
       ).should.be.rejectedWith('RGRegistry::generateBatch: Batch already created');
     });
   });
@@ -136,7 +137,7 @@ contract('RheaGeRegistry Test', ([
       await this.registry.generateBatch(
         ...Object.values(newBatch),
         rgtReceiver,
-        { from: minter }
+        { from: certifier }
       ).should.be.fulfilled;
 
       await this.rheaGe.transfer(offsetter1, tokenAmtBought, { from: rgtReceiver });
@@ -146,7 +147,7 @@ contract('RheaGeRegistry Test', ([
       await this.registry.retire(tokenAmtRetire1, { from: offsetter1 }).should.be.fulfilled;
 
       // for checking proper storage updates
-      await this.registry.retiretokenAmtRetire2, { from: rgtReceiver }).should.be.fulfilled;
+      await this.registry.retire(tokenAmtRetire2, { from: rgtReceiver }).should.be.fulfilled;
 
       const offsetterBalanceAfter = await this.rheaGe.balanceOf(offsetter1);
 
@@ -163,6 +164,7 @@ contract('RheaGeRegistry Test', ([
     });
 
     // TODO: add more tests here !!! (i.e. does it add up to retiredBalanced if a client offsets multiple times?)
+    // TODO: also test `addProject()`
   });
 
   // TODO: test access to each function

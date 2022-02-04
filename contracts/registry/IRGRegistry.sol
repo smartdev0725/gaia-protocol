@@ -20,6 +20,13 @@ interface IRGRegistry is Structs {
         address mintTo
     ) external;
 
+    function addProject(
+        uint256 id,
+        string calldata name,
+        string calldata projectType,
+        string calldata certifications
+    ) external;
+
     function retire(
         uint256 carbonTonAmt
     ) external;
