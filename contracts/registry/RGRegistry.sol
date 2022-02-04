@@ -78,8 +78,8 @@ contract RGRegistry is RoleAware, IRGRegistry {
     // TODO: who calls this function? who is msg.sender ?? how should we guard it if at all ??
     function purchase(
         address paymentToken,
-        uint256 paymentAmt,
-        uint256 rgtAmt
+        uint256 paymentAmount,
+        uint256 rgtAmount
     ) external payable override {
         // TODO: what other checks do we need ??
         // TODO: what other logic do we need here ??
@@ -87,33 +87,33 @@ contract RGRegistry is RoleAware, IRGRegistry {
         // TODO: !IMPORTANT! this is a TEMPORARY solution provided for backend prototype testing!
         // TODO: if puchase() functionality to be here for MVP version - we need to think on
         // TODO: how to handle this !!!
-        if (paymentAmt != 0) {
+        if (paymentAmount != 0) {
             collectPayment(
                 msg.sender,
                 address(this),
                 paymentToken,
-                paymentAmt
+                paymentAmount
             );
         }
 
         require(
-            IRheaGeToken(rheaGeToken).transfer(msg.sender, rgtAmt),
+            IRheaGeToken(rheaGeToken).transfer(msg.sender, rgtAmount),
             "RGRegistry::purchase: RheaGeToken::transfer failed"
         );
 
-        emit InitialPurchase(msg.sender, rgtAmt);
+        emit InitialPurchase(msg.sender, rgtAmount);
     }
 
     function offset(
-        uint256 carbonTonAmt
+        uint256 carbonTokenAmount
     ) external override {
-        IRheaGeToken(rheaGeToken).burn(msg.sender, carbonTonAmt);
+        IRheaGeToken(rheaGeToken).burn(msg.sender, carbonTokenAmount);
         unchecked {
-            retiredBalances[msg.sender] += carbonTonAmt;
-            totalSupplyRetired += carbonTonAmt;
+            retiredBalances[msg.sender] += carbonTokenAmount;
+            totalSupplyRetired += carbonTokenAmount;
         }
 
-        emit OffsetAndBurned(msg.sender, carbonTonAmt);
+        emit OffsetAndBurned(msg.sender, carbonTokenAmount);
     }
 
     // TODO: should we make a better guard or none at all ??
@@ -125,9 +125,9 @@ contract RGRegistry is RoleAware, IRGRegistry {
         uint256 amount
     ) internal {
         bool isEther = ITokenValidator(tokenValidator).validateToken(tokenAddress);
-        uint256 paymentAmt = isEther ? msg.value : amount;
+        uint256 paymentAmount = isEther ? msg.value : amount;
         // TODO: if payment with zero is decided to stay here - think if this line is needed !!
-        require(paymentAmt != 0, "RGRegistry::collectPayment: no payment provided");
+        require(paymentAmount != 0, "RGRegistry::collectPayment: no payment provided");
 
         if (isEther) {
             require(
@@ -139,7 +139,7 @@ contract RGRegistry is RoleAware, IRGRegistry {
                 msg.value == 0,
                 "RGRegistry::collectPayment: ETH has been sent with an ERC20 purchase"
             );
-            IERC20(tokenAddress).safeTransferFrom(from, to, paymentAmt);
+            IERC20(tokenAddress).safeTransferFrom(from, to, paymentAmount);
         }
     }
 
@@ -151,21 +151,21 @@ contract RGRegistry is RoleAware, IRGRegistry {
     ) external override onlyRole(GOVERNOR_ROLE) {
         // TODO: think on the archi of Payments and where should each function be
         //  this contract vs PaymentManager
-        uint256 toWithdrawAmt;
+        uint256 toWithdrawAmount;
         // this returns if token is ETH or not + validates
         if (ITokenValidator(tokenValidator).validateToken(token)) {
-            toWithdrawAmt = withdrawAll && amount == 0
+            toWithdrawAmount = withdrawAll && amount == 0
                 ? address(this).balance
                 : amount;
 
-            (bool success, ) = to.call{value: toWithdrawAmt}("");
+            (bool success, ) = to.call{value: toWithdrawAmount}("");
             require(success, "RheaGeRegistry::withdrawPaidFunds: ETH transfer failed");
         } else {
-            toWithdrawAmt = withdrawAll && amount == 0
+            toWithdrawAmount = withdrawAll && amount == 0
                 ? IERC20(token).balanceOf(address(this))
                 : amount;
 
-            IERC20(token).safeTransfer(to, toWithdrawAmt);
+            IERC20(token).safeTransfer(to, toWithdrawAmount);
         }
     }
 
