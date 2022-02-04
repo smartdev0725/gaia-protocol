@@ -83,12 +83,18 @@ contract RGRegistry is RoleAware, IRGRegistry {
     ) external payable override {
         // TODO: what other checks do we need ??
         // TODO: what other logic do we need here ??
-        collectPayment(
-            msg.sender,
-            address(this),
-            paymentToken,
-            paymentAmt
-        );
+
+        // TODO: !IMPORTANT! this is a TEMPORARY solution provided for backend prototype testing!
+        // TODO: if puchase() functionality to be here for MVP version - we need to think on
+        // TODO: how to handle this !!!
+        if (paymentAmt != 0) {
+            collectPayment(
+                msg.sender,
+                address(this),
+                paymentToken,
+                paymentAmt
+            );
+        }
 
         require(
             IRheaGeToken(rheaGeToken).transfer(msg.sender, rgtAmt),
@@ -120,6 +126,7 @@ contract RGRegistry is RoleAware, IRGRegistry {
     ) internal {
         bool isEther = ITokenValidator(tokenValidator).validateToken(tokenAddress);
         uint256 paymentAmt = isEther ? msg.value : amount;
+        // TODO: if payment with zero is decided to stay here - think if this line is needed !!
         require(paymentAmt != 0, "RGRegistry::collectPayment: no payment provided");
 
         if (isEther) {

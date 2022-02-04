@@ -146,6 +146,25 @@ contract('RheaGeRegistry Test', ([
   });
 
   describe('#purchase()', () => {
+    // TODO: remove this test if this situation is not viable anymore !!
+    // TODO: only made for Java Backend testing TEMPORARILY
+    it('should be able to purchase with no payment', async function () {
+      const rheaGeAmt = new BigNumber(123);
+
+      const clientBalanceBefore = await this.rheaGe.balanceOf(buyer1);
+
+      await this.registry.purchase(
+        this.payToken.address,
+        '0',
+        rheaGeAmt,
+        { from: buyer1 }
+      ).should.be.fulfilled;
+
+      const clientBalanceAfter = await this.rheaGe.balanceOf(buyer1);
+
+      clientBalanceAfter.sub(clientBalanceBefore).should.be.bignumber.equal(rheaGeAmt);
+    });
+
     it('should transfer minted tokens to 2 different clients who pay with ERC20', async function () {
       const rheaGeAmt1 = new BigNumber(50);
       const rheaGeAmt2 = new BigNumber(35);
@@ -256,7 +275,9 @@ contract('RheaGeRegistry Test', ([
       ).should.be.rejectedWith('RGRegistry::collectPayment: ETH has been sent with an ERC20 purchase');
     });
 
-    it('should NOT transfer if payment was zero with an ERC20 or ETH purchase', async function () {
+    // TODO: unblock this test if the ability to pay with "0" is removed !!!
+    // TODO: see test 'should be able to purchase with no payment'
+    it.skip('should NOT transfer if payment was zero with an ERC20 or ETH purchase', async function () {
       const rheaGeAmt = new BigNumber(50);
       const zeroAmt = new BigNumber(0);
 
