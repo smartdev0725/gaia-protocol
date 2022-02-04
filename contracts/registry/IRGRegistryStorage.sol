@@ -8,15 +8,13 @@ interface IRGRegistryStorage is CCBatchStruct {
     // TODO: which are indexed ??
     event BatchGenerated(
         string serialNumber,
-        uint256 projectId,
-        string vintage,
-        string creditType,
-        uint256 units,
-        address indexed batchOwner,
-        address indexed certifier
+        uint256 indexed projectId,
+        string indexed vintage,
+        string indexed creditType,
+        uint256 quantity,
+        address initialRgtOwner
     );
 
-    // TODO: naming ??
     event Offset(
         address indexed holder,
         uint256 amount

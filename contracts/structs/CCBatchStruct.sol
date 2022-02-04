@@ -9,8 +9,8 @@ interface CCBatchStruct {
         uint256 projectId;
         string vintage;
         string creditType;
-        uint256 units;
-        address owner;
+        uint256 quantity;
+        address initialRgtOwner;
         bool created;
     }
 }

@@ -26,8 +26,7 @@ contract RGRegistry is RGRegistryStorage, IRGRegistry {
         uint256 projectId,
         string calldata vintage,
         string calldata creditType,
-        uint256 units,
-        address batchOwner, // TODO: is this needed at all ??
+        uint256 quantity,
         address mintTo
     ) external override onlyRole(MINTER_ROLE) {
         require(!registeredBatches[serialNumber].created, "RGRegistry::generateBatch: Batch already created");
@@ -37,8 +36,8 @@ contract RGRegistry is RGRegistryStorage, IRGRegistry {
             projectId,
             vintage,
             creditType,
-            units,
-            batchOwner,
+            quantity,
+            mintTo,
             true
         );
 
@@ -47,12 +46,11 @@ contract RGRegistry is RGRegistryStorage, IRGRegistry {
             projectId,
             vintage,
             creditType,
-            units,
-            batchOwner,
-            msg.sender
+            quantity,
+            mintTo
         );
 
-        IRheaGeToken(rheaGeToken).mint(mintTo, units);
+        IRheaGeToken(rheaGeToken).mint(mintTo, quantity);
     }
 
     function offset(

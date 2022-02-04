@@ -22,7 +22,6 @@ const {
 contract('RheaGeRegistry Test', ([
   governor,
   minter,
-  batchOwner,
   offsetter1,
   rheaGeTokenMock,
   rgtReceiver,
@@ -32,8 +31,7 @@ contract('RheaGeRegistry Test', ([
     projectId: new BigNumber(777),
     vintage: 'vintage', // TODO: what should this look like ??
     creditType: 'creditType', // TODO: what should this look like ??
-    units: new BigNumber(10000),
-    batchOwner,
+    quantity: new BigNumber(10000),
   };
 
   before(async function () {
@@ -86,8 +84,8 @@ contract('RheaGeRegistry Test', ([
         projectId: projectIdSC,
         vintage: vintageSC,
         creditType: cresitTypeSC,
-        units: unitsSC,
-        owner: ownerSC,
+        quantity: quantitySC,
+        initialRgtOwner: initialRgtOwnerSC,
         created,
       } = await this.registry.registeredBatches(newBatch.serialNumber);
 
@@ -95,13 +93,13 @@ contract('RheaGeRegistry Test', ([
       projectIdSC.should.be.bignumber.equal(newBatch.projectId);
       vintageSC.should.be.equal(newBatch.vintage);
       cresitTypeSC.should.be.equal(newBatch.creditType);
-      unitsSC.should.be.bignumber.equal(newBatch.units);
-      ownerSC.should.be.equal(newBatch.batchOwner);
+      quantitySC.should.be.bignumber.equal(newBatch.quantity);
+      initialRgtOwnerSC.should.be.equal(rgtReceiver);
       created.should.be.equal(true);
 
       const receiverBalAfter = await this.rheaGe.balanceOf(rgtReceiver);
-      receiverBalAfter.sub(receiverBalBefore).should.be.bignumber.equal(newBatch.units);
-      receiverBalAfter.sub(receiverBalBefore).should.be.bignumber.equal(unitsSC);
+      receiverBalAfter.sub(receiverBalBefore).should.be.bignumber.equal(newBatch.quantity);
+      receiverBalAfter.sub(receiverBalBefore).should.be.bignumber.equal(quantitySC);
     });
 
     it('should should NOT generate the same batch twice', async function () {

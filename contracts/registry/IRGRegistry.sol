@@ -16,8 +16,7 @@ interface IRGRegistry is CCBatchStruct {
         uint256 projectId,
         string calldata vintage,
         string calldata creditType,
-        uint256 units,
-        address batchOwner,
+        uint256 quantity,
         address mintTo
     ) external;
 
