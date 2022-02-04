@@ -18,27 +18,15 @@ interface IRGRegistry is CCBatchStruct {
         string calldata vintage,
         string calldata creditType,
         uint256 units,
-        address batchOwner
+        address batchOwner,
+        address mintTo
     ) external;
-
-    function purchase(
-        address paymentToken,
-        uint256 paymentAmt,
-        uint256 rgtAmt
-    ) external payable;
 
     function offset(
         uint256 carbonTonAmt
     ) external;
 
     function setRheaGeToken(address _rheaGeToken) external;
-
-    function withdrawPaidFunds(
-        address to,
-        address token,
-        uint256 amount,
-        bool withdrawAll
-    ) external;
 
     function getRegisteredBatch(string calldata serialNumber) external view returns (CCBatch memory);
 }
