@@ -53,7 +53,7 @@ contract RGRegistry is RGRegistryStorage, IRGRegistry {
         IRheaGeToken(rheaGeToken).mint(mintTo, quantity);
     }
 
-    function offset(
+    function retire(
         uint256 carbonTonAmt
     ) external override onlyRouter {
         IRheaGeToken(rheaGeToken).burn(msg.sender, carbonTonAmt);
@@ -62,7 +62,7 @@ contract RGRegistry is RGRegistryStorage, IRGRegistry {
             totalSupplyRetired += carbonTonAmt;
         }
 
-        emit Offset(msg.sender, carbonTonAmt);
+        emit Retired(msg.sender, carbonTonAmt);
     }
 
     function setRheaGeToken(address _rheaGeToken) external override onlyRole(GOVERNOR_ROLE) onlyRouter {

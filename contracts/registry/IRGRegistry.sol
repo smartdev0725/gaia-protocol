@@ -20,7 +20,7 @@ interface IRGRegistry is CCBatchStruct {
         address mintTo
     ) external;
 
-    function offset(
+    function retire(
         uint256 carbonTonAmt
     ) external;
 

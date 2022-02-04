@@ -5,7 +5,6 @@ import "../structs/CCBatchStruct.sol";
 
 
 interface IRGRegistryStorage is CCBatchStruct {
-    // TODO: which are indexed ??
     event BatchGenerated(
         string serialNumber,
         uint256 indexed projectId,
@@ -15,7 +14,7 @@ interface IRGRegistryStorage is CCBatchStruct {
         address initialRgtOwner
     );
 
-    event Offset(
+    event Retired(
         address indexed holder,
         uint256 amount
     );
