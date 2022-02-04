@@ -7,6 +7,16 @@ import "@openzeppelin/contracts-upgradeable/token/ERC20/extensions/IERC20Metadat
 
 
 interface IRheaGeToken is IERC20Upgradeable, IERC20MetadataUpgradeable {
+    event RheaGeTokensMinted(
+        address indexed to,
+        uint256 amount
+    );
+
+    event RheaGeTokensBurned(
+        address indexed from,
+        uint256 amount
+    );
+
     function init(
         address _roleManager
     ) external;

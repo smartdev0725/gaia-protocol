@@ -22,9 +22,11 @@ contract RheaGeToken is RoleAware, ERC20Upgradeable, OnlyRouterAccess, IRheaGeTo
 
     function mint(address to, uint256 amount) public override onlyRole(MINTER_ROLE) {
         _mint(to, amount);
+        emit RheaGeTokensMinted(to, amount);
     }
 
     function burn(address account, uint256 amount) public override onlyRole(BURNER_ROLE) {
         _burn(account, amount);
+        emit RheaGeTokensBurned(account, amount);
     }
 }
