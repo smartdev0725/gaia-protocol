@@ -26,7 +26,7 @@ export const tokenName = 'RheaGe'; // TODO: figure out the name
 export const tokenSymbol = 'RGT';
 
 
-contract.only('RheaGeToken Basic Tests', ([
+contract('RheaGeToken Basic Tests', ([
   governor,
   minter,
   burner,
