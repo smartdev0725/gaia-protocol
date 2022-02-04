@@ -7,8 +7,6 @@ import "../../access/RoleAware.sol";
 import "../../utils/OnlyRouterAccess.sol";
 
 
-// TODO: can and should we make token not tied to RoleManager ??
-// TODO: should we make this token pausable ??
 contract RheaGeToken is RoleAware, ERC20Upgradeable, OnlyRouterAccess, IRheaGeToken {
 
     function init(
