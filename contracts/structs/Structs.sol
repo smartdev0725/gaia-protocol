@@ -2,8 +2,7 @@
 pragma solidity ^0.8.11;
 
 
-interface CCBatchStruct {
-    // TODO: which fields do we need here ??
+interface Structs {
     struct CCBatch {
         string serialNumber;
         uint256 projectId;
@@ -11,6 +10,13 @@ interface CCBatchStruct {
         string creditType;
         uint256 quantity;
         address initialRgtOwner;
+        bool created;
+    }
+
+    struct CCProject {
+        string name;
+        string projectType;
+        string certifications;
         bool created;
     }
 }

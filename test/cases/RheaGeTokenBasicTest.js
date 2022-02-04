@@ -12,7 +12,7 @@ require('chai')
 
 const RoleManager = artifacts.require('./RoleManager.sol');
 
-export const tokenName = 'RheaGe Token'; // TODO: figure out the name
+export const tokenName = 'RheaGe Token';
 export const tokenSymbol = 'RGT';
 
 

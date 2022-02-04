@@ -28,7 +28,7 @@ contract RGRegistry is RGRegistryStorage, IRGRegistry {
         string calldata creditType,
         uint256 quantity,
         address mintTo
-    ) external override onlyRole(MINTER_ROLE) {
+    ) external override onlyRole(CERTIFIER_ROLE) onlyRouter {
         require(!registeredBatches[serialNumber].created, "RGRegistry::generateBatch: Batch already created");
 
         registeredBatches[serialNumber] = CCBatch(
@@ -47,10 +47,29 @@ contract RGRegistry is RGRegistryStorage, IRGRegistry {
             vintage,
             creditType,
             quantity,
-            mintTo
+            mintTo,
+            msg.sender
         );
 
         IRheaGeToken(rheaGeToken).mint(mintTo, quantity);
+    }
+
+    function addProject(
+        uint256 id,
+        string calldata name,
+        string calldata projectType,
+        string calldata certifications
+    ) external override onlyRole(CERTIFIER_ROLE) onlyRouter {
+        require(!registeredProjects[id].created, "RGRegistry::addProject: project has already been created");
+
+        registeredProjects[id] = CCProject(
+            name,
+            projectType,
+            certifications,
+            true
+        );
+
+        emit ProjectAdded(id, name, projectType, certifications, msg.sender);
     }
 
     function retire(
@@ -75,5 +94,9 @@ contract RGRegistry is RGRegistryStorage, IRGRegistry {
 
     function getRegisteredBatch(string calldata serialNumber) external view override onlyRouter returns (CCBatch memory) {
         return registeredBatches[serialNumber];
+    }
+
+    function getRegisteredProject(uint256 id) external view override onlyRouter returns (CCProject memory) {
+        return registeredProjects[id];
     }
 }

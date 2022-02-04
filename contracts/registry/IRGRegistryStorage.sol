@@ -1,17 +1,22 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.11;
 
-import "../structs/CCBatchStruct.sol";
+import "../structs/Structs.sol";
 
 
-interface IRGRegistryStorage is CCBatchStruct {
+interface IRGRegistryStorage is Structs {
     event BatchGenerated(
         string serialNumber,
         uint256 indexed projectId,
         string indexed vintage,
         string indexed creditType,
         uint256 quantity,
-        address initialRgtOwner
+        address initialRgtOwner,
+        address certifier
+    );
+
+    event ProjectAdded(
+
     );
 
     event Retired(

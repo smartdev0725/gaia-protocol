@@ -122,16 +122,16 @@ contract('RheaGeRegistry Test', ([
     });
   });
 
-  describe('#offset()', async () => {
+  describe('#retire()', async () => {
     // eslint-disable-next-line max-len
-    it('should offset, burn the correct amount of tokens and change clients balance appropriately when called by any client', async function () {
+    it('should retire, burn the correct amount of tokens and change clients balance appropriately when called by any client', async function () {
       const newBatch = {
         ...batchDataBase,
         serialNumber: '3331233',
       };
       const tokenAmtBought = new BigNumber(350);
-      const tokenAmtOffset1 = new BigNumber(7);
-      const tokenAmtOffset2 = new BigNumber(179);
+      const tokenAmtRetire1 = new BigNumber(7);
+      const tokenAmtRetire2 = new BigNumber(179);
 
       await this.registry.generateBatch(
         ...Object.values(newBatch),
@@ -143,23 +143,23 @@ contract('RheaGeRegistry Test', ([
 
       const offsetterBalanceBefore = await this.rheaGe.balanceOf(offsetter1);
 
-      await this.registry.offset(tokenAmtOffset1, { from: offsetter1 }).should.be.fulfilled;
+      await this.registry.retire(tokenAmtRetire1, { from: offsetter1 }).should.be.fulfilled;
 
       // for checking proper storage updates
-      await this.registry.offset(tokenAmtOffset2, { from: rgtReceiver }).should.be.fulfilled;
+      await this.registry.retiretokenAmtRetire2, { from: rgtReceiver }).should.be.fulfilled;
 
       const offsetterBalanceAfter = await this.rheaGe.balanceOf(offsetter1);
 
-      offsetterBalanceBefore.sub(offsetterBalanceAfter).should.be.bignumber.equal(tokenAmtOffset1);
-      offsetterBalanceAfter.should.be.bignumber.equal(tokenAmtBought.sub(tokenAmtOffset1));
+      offsetterBalanceBefore.sub(offsetterBalanceAfter).should.be.bignumber.equal(tokenAmtRetire1);
+      offsetterBalanceAfter.should.be.bignumber.equal(tokenAmtBought.sub(tokenAmtRetire1));
 
       const retiredBalanceClient1 = await this.registry.retiredBalances(offsetter1);
       const retiredBalanceClient2 = await this.registry.retiredBalances(rgtReceiver);
       const totalSupplyRetired = await this.registry.totalSupplyRetired();
 
-      retiredBalanceClient1.should.be.bignumber.equal(tokenAmtOffset1);
-      retiredBalanceClient2.should.be.bignumber.equal(tokenAmtOffset2);
-      totalSupplyRetired.should.be.bignumber.equal(tokenAmtOffset1.add(tokenAmtOffset2));
+      retiredBalanceClient1.should.be.bignumber.equal(tokenAmtRetire1);
+      retiredBalanceClient2.should.be.bignumber.equal(tokenAmtRetire2);
+      totalSupplyRetired.should.be.bignumber.equal(tokenAmtRetire1.add(tokenAmtRetire2));
     });
 
     // TODO: add more tests here !!! (i.e. does it add up to retiredBalanced if a client offsets multiple times?)

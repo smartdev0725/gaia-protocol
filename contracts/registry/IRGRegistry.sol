@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.11;
 
-import "../structs/CCBatchStruct.sol";
+import "../structs/Structs.sol";
 
 
-interface IRGRegistry is CCBatchStruct {
+interface IRGRegistry is Structs {
 
     function init(
         address _rheaGeToken,
@@ -27,4 +27,6 @@ interface IRGRegistry is CCBatchStruct {
     function setRheaGeToken(address _rheaGeToken) external;
 
     function getRegisteredBatch(string calldata serialNumber) external view returns (CCBatch memory);
+
+    function getRegisteredProject(uint256 id) external view returns (CCProject memory);
 }
