@@ -105,7 +105,7 @@ contract('RheaGeToken Basic Tests', ([
   it('should NOT burn zero amount', async function () {
     const amount = new BigNumber(0);
     await this.rheaGe.burn(moneybag, amount, { from: burner })
-      .should.be.rejectedWith('ERC20: burning zero amount');
+      .should.be.rejectedWith('RheaGeToken: burning zero amount');
   });
 
   it('should NOT burn without BURNER_ROLE', async function () {
