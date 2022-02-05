@@ -30,8 +30,8 @@ contract('RheaGeToken Basic Tests', ([
   governor,
   minter,
   burner,
-  moneybag,
-  clientWithoutTokens,
+  moneybag, // send any amount to this account
+  clientWithoutTokens, // do not send tokens to this account
   client1,
   client2,
 ]) => {
