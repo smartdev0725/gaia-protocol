@@ -7,7 +7,7 @@ const RoleManager = artifacts.require('./RoleManager.sol');
 
 const {
   GOVERNOR_ROLE,
-  OPERATOR_ROLE,
+  CERTIFIER_ROLE,
 } = roleNames;
 
 require('chai')
@@ -43,8 +43,8 @@ contract('RoleManager', ([
   roleManager3,
   governor1,
   notGovernor,
-  operatorAcc,
-  operatorAcc2,
+  certifierAcc,
+  certifierAcc2,
 ]) => {
   it('should NOT be deployed with less governor accounts then needed confirmations', async () => {
     const confirmationsRequired = 3;
@@ -110,64 +110,64 @@ contract('RoleManager', ([
       assert.equal(isRoleManagerGovernor, true);
     });
 
-    it('#addRolesForAddresses should add multiple operator account roles', async function () {
-      const addresses = [ operatorAcc, operatorAcc2 ];
+    it('#addRolesForAddresses should add multiple certifier account roles', async function () {
+      const addresses = [ certifierAcc, certifierAcc2 ];
       await checkRoles(
         this.roleManager,
         addresses,
-        OPERATOR_ROLE,
+        CERTIFIER_ROLE,
         false,
         roleManager1
       );
 
       await this.roleManager.addRolesForAddresses(
         addresses,
-        [ OPERATOR_ROLE, OPERATOR_ROLE ],
+        [ CERTIFIER_ROLE, CERTIFIER_ROLE ],
         { from: roleManager1 }
       );
 
       await checkRoles(
         this.roleManager,
         addresses,
-        OPERATOR_ROLE,
+        CERTIFIER_ROLE,
         true,
         roleManager1
       );
     });
 
-    it('#removeRoleForAddress should remove operator account role', async function () {
+    it('#removeRoleForAddress should remove certifier account role', async function () {
       await checkRoles(
         this.roleManager,
-        [ operatorAcc ],
-        OPERATOR_ROLE,
+        [ certifierAcc ],
+        CERTIFIER_ROLE,
         false,
         roleManager1
       );
 
       await this.roleManager.addRoleForAddress(
-        operatorAcc,
-        OPERATOR_ROLE,
+        certifierAcc,
+        CERTIFIER_ROLE,
         { from: roleManager1 }
       );
 
       await checkRoles(
         this.roleManager,
-        [ operatorAcc ],
-        OPERATOR_ROLE,
+        [ certifierAcc ],
+        CERTIFIER_ROLE,
         true,
         roleManager1
       );
 
       await this.roleManager.removeRoleForAddress(
-        operatorAcc,
-        OPERATOR_ROLE,
+        certifierAcc,
+        CERTIFIER_ROLE,
         { from: roleManager1 }
       );
 
       await checkRoles(
         this.roleManager,
-        [ operatorAcc ],
-        OPERATOR_ROLE,
+        [ certifierAcc ],
+        CERTIFIER_ROLE,
         false,
         roleManager1
       );
@@ -175,16 +175,16 @@ contract('RoleManager', ([
 
     it('#addRolesForAddresses should revert when passed arrays are different length', async function () {
       await this.roleManager.addRolesForAddresses(
-        [ operatorAcc, operatorAcc2 ],
-        [ OPERATOR_ROLE ],
+        [ certifierAcc, certifierAcc2 ],
+        [ CERTIFIER_ROLE ],
         { from: roleManager1 }
       ).should.be.rejectedWith(
         'RoleManager::addRolesForAddresses: addresses and rolesArr should be the same length'
       );
 
       await this.roleManager.addRolesForAddresses(
-        [ operatorAcc ],
-        [ OPERATOR_ROLE, OPERATOR_ROLE ],
+        [ certifierAcc ],
+        [ CERTIFIER_ROLE, CERTIFIER_ROLE ],
         { from: roleManager1 }
       ).should.be.rejectedWith(
         'RoleManager::addRolesForAddresses: addresses and rolesArr should be the same length'
@@ -192,19 +192,19 @@ contract('RoleManager', ([
 
       await checkRoles(
         this.roleManager,
-        [ operatorAcc, operatorAcc2 ],
-        OPERATOR_ROLE,
+        [ certifierAcc, certifierAcc2 ],
+        CERTIFIER_ROLE,
         false,
         roleManager1
       );
     });
 
     it('#addRolesForAddresses should revert when one of the addresses is zero', async function () {
-      const addresses = [ operatorAcc, '0x0000000000000000000000000000000000000000' ];
+      const addresses = [ certifierAcc, '0x0000000000000000000000000000000000000000' ];
 
       await this.roleManager.addRolesForAddresses(
         addresses,
-        [ OPERATOR_ROLE, OPERATOR_ROLE ],
+        [ CERTIFIER_ROLE, CERTIFIER_ROLE ],
         { from: roleManager1 }
       ).should.be.rejectedWith('RoleManager::addRolesForAddresses: one of the addresses is zero');
     });
@@ -223,7 +223,7 @@ contract('RoleManager', ([
     it('#removeRoleForAddress should revert if zero addressed is passed', async function () {
       await this.roleManager.removeRoleForAddress(
         '0x0000000000000000000000000000000000000000',
-        OPERATOR_ROLE,
+        CERTIFIER_ROLE,
         { from: roleManager1 }
       ).should.be.rejectedWith(
         'RoleManager::removeRoleForAddress: zero address passed'
