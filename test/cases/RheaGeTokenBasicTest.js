@@ -4,14 +4,14 @@ import {
 } from '@nomisma/nomisma-smart-contract-helpers';
 import { deployRheaGeToken } from '../helpers/rgt';
 
+import {
+  roleNames,
+} from '../helpers/roles';
+
 require('chai')
   .use(require('chai-as-promised'))
   .use(getChaiBN())
   .should();
-
-import {
-  roleNames,
-} from '../helpers/roles';
 
 
 const {
@@ -37,10 +37,10 @@ contract('RheaGeToken Basic Tests', ([
 ]) => {
   before(async function () {
     const confirmationsRequired = 1;
-    this.roleManager = await RoleManager.new([governor], confirmationsRequired);
+    this.roleManager = await RoleManager.new([ governor ], confirmationsRequired);
     await this.roleManager.addRolesForAddresses(
-      [minter, burner],
-      [MINTER_ROLE, BURNER_ROLE],
+      [ minter, burner ],
+      [ MINTER_ROLE, BURNER_ROLE ],
       { from: governor }
     );
     this.rheaGe = await deployRheaGeToken(this.roleManager.address, governor);
@@ -105,7 +105,7 @@ contract('RheaGeToken Basic Tests', ([
   it('should NOT burn zero amount', async function () {
     const amount = new BigNumber(0);
     await this.rheaGe.burn(moneybag, amount, { from: burner })
-      .should.be.rejectedWith('RheaGeToken: burning zero amount');
+      .should.be.rejectedWith('ERC20: burning zero amount');
   });
 
   it('should NOT burn without BURNER_ROLE', async function () {
@@ -168,11 +168,11 @@ contract('RheaGeToken Basic Tests', ([
       .should.be.rejectedWith('ERC20: transfer amount exceeds balance');
   });
 
-  it.skip('should NOT transfer from locked address', async function () {
+  it.skip('should NOT transfer from locked address', async () => {
 
   });
 
-  it.skip('should NOT transferFrom from locked address', async function () {
+  it.skip('should NOT transferFrom from locked address', async () => {
 
   });
 
