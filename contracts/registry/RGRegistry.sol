@@ -1,36 +1,21 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.11;
 
-import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import "@openzeppelin/contracts-upgradeable/token/ERC20/utils/SafeERC20Upgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/token/ERC20/IERC20Upgradeable.sol";
 import "../access/RoleAware.sol";
 import "../tokens/rgt/IRheaGeToken.sol";
 import "./IRGRegistry.sol";
+import "./RGRegistryStorage.sol";
 
 
-contract RGRegistry is RoleAware, IRGRegistry {
-    using SafeERC20 for IERC20;
+contract RGRegistry is RGRegistryStorage, IRGRegistry {
 
-    // TODO: which fields do we need here ??
-    struct CCBatch {
-        string serialNumber;
-        uint256 projectId;
-        string vintage;
-        string creditType;
-        uint256 units;
-        address owner;
-        bool created;
-    }
-
-    address public rheaGeToken;
-
-    mapping(string => CCBatch) public registeredBatches;
-    mapping(address => uint256) public retiredBalances;
-    uint256 public totalSupplyRetired;
-
-    constructor(
+    function init(
         address _rheaGeToken,
         address _roleManager
-    ) {
+    // TODO: proxy: figure out a good way to make this only callable by a Router
+    ) external override onlyRouter initializer {
         require(_rheaGeToken != address(0), "RGRegistry: zero address passed as _rheaGeToken");
         rheaGeToken = _rheaGeToken;
         setRoleManager(_roleManager);
@@ -41,10 +26,9 @@ contract RGRegistry is RoleAware, IRGRegistry {
         uint256 projectId,
         string calldata vintage,
         string calldata creditType,
-        uint256 units,
-        address batchOwner, // TODO: is this needed at all ??
+        uint256 quantity,
         address mintTo
-    ) external override onlyRole(MINTER_ROLE) {
+    ) external override onlyRole(CERTIFIER_ROLE) onlyRouter {
         require(!registeredBatches[serialNumber].created, "RGRegistry::generateBatch: Batch already created");
 
         registeredBatches[serialNumber] = CCBatch(
@@ -52,8 +36,8 @@ contract RGRegistry is RoleAware, IRGRegistry {
             projectId,
             vintage,
             creditType,
-            units,
-            batchOwner,
+            quantity,
+            mintTo,
             true
         );
 
@@ -62,31 +46,57 @@ contract RGRegistry is RoleAware, IRGRegistry {
             projectId,
             vintage,
             creditType,
-            units,
-            batchOwner,
+            quantity,
+            mintTo,
             msg.sender
         );
 
-        IRheaGeToken(rheaGeToken).mint(mintTo, units);
+        IRheaGeToken(rheaGeToken).mint(mintTo, quantity);
     }
 
-    function offset(
+    function addProject(
+        uint256 id,
+        string calldata name,
+        string calldata projectType,
+        string calldata certifications
+    ) external override onlyRole(CERTIFIER_ROLE) onlyRouter {
+        require(!registeredProjects[id].created, "RGRegistry::addProject: project has already been created");
+
+        registeredProjects[id] = CCProject(
+            name,
+            projectType,
+            certifications,
+            true
+        );
+
+        emit ProjectAdded(id, name, projectType, certifications, msg.sender);
+    }
+
+    function retire(
         uint256 carbonTonAmt
-    ) external override {
+    ) external override onlyRouter {
         IRheaGeToken(rheaGeToken).burn(msg.sender, carbonTonAmt);
         unchecked {
             retiredBalances[msg.sender] += carbonTonAmt;
             totalSupplyRetired += carbonTonAmt;
         }
 
-        emit Offset(msg.sender, carbonTonAmt);
+        emit Retired(msg.sender, carbonTonAmt);
     }
 
-    function setRheaGeToken(address _rheaGeToken) external override onlyRole(GOVERNOR_ROLE) {
+    function setRheaGeToken(address _rheaGeToken) external override onlyRole(GOVERNOR_ROLE) onlyRouter {
         require(
             _rheaGeToken != address(0),
             "RGRegistry::generateBatch: 0x0 address passed as rheaGeTokenAddress"
         );
         rheaGeToken = _rheaGeToken;
+    }
+
+    function getRegisteredBatch(string calldata serialNumber) external view override onlyRouter returns (CCBatch memory) {
+        return registeredBatches[serialNumber];
+    }
+
+    function getRegisteredProject(uint256 id) external view override onlyRouter returns (CCProject memory) {
+        return registeredProjects[id];
     }
 }

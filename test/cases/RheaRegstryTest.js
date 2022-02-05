@@ -2,8 +2,9 @@ import {
   getChaiBN,
   BigNumber,
 } from '@nomisma/nomisma-smart-contract-helpers';
+import { deployRegistry } from '../helpers/registry';
+import { deployRheaGeToken } from '../helpers/rgt';
 import { roleNames } from '../helpers/roles';
-import { tokenName, tokenSymbol } from './RheaGeTokenBasicTest';
 
 require('chai')
   .use(require('chai-as-promised'))
@@ -11,19 +12,17 @@ require('chai')
   .should();
 
 
-const RheaGe = artifacts.require('./RheaGeToken.sol');
-const Registry = artifacts.require('./RGRegistry.sol');
 const RoleManager = artifacts.require('./RoleManager.sol');
 
 const {
   MINTER_ROLE,
   BURNER_ROLE,
+  CERTIFIER_ROLE,
 } = roleNames;
 
 contract('RheaGeRegistry Test', ([
   governor,
-  minter,
-  batchOwner,
+  certifier,
   offsetter1,
   rheaGeTokenMock,
   rgtReceiver,
@@ -33,33 +32,27 @@ contract('RheaGeRegistry Test', ([
     projectId: new BigNumber(777),
     vintage: 'vintage', // TODO: what should this look like ??
     creditType: 'creditType', // TODO: what should this look like ??
-    units: new BigNumber(10000),
-    batchOwner,
+    quantity: new BigNumber(10000),
   };
 
   before(async function () {
     this.roleManager = await RoleManager.new([ governor ], '1');
-    this.rheaGe = await RheaGe.new(
-      tokenName,
-      tokenSymbol,
-      this.roleManager.address,
-      { from: governor }
-    );
+    this.rheaGe = await deployRheaGeToken(this.roleManager.address, governor);
 
-    this.registry = await Registry.new(
+    this.registry = await deployRegistry(
       this.rheaGe.address,
       this.roleManager.address,
-      { from: governor }
+      governor
     );
 
     await this.roleManager.addRolesForAddresses(
       [
-        minter,
+        certifier,
         this.registry.address,
         this.registry.address,
       ],
       [
-        MINTER_ROLE,
+        CERTIFIER_ROLE,
         MINTER_ROLE,
         BURNER_ROLE,
       ],
@@ -69,7 +62,7 @@ contract('RheaGeRegistry Test', ([
     await this.registry.generateBatch(
       ...Object.values(batchDataBase),
       rgtReceiver,
-      { from: minter }
+      { from: certifier }
     );
   });
 
@@ -84,7 +77,7 @@ contract('RheaGeRegistry Test', ([
       await this.registry.generateBatch(
         ...Object.values(newBatch),
         rgtReceiver,
-        { from: minter }
+        { from: certifier }
       ).should.be.fulfilled;
 
       const {
@@ -92,8 +85,8 @@ contract('RheaGeRegistry Test', ([
         projectId: projectIdSC,
         vintage: vintageSC,
         creditType: cresitTypeSC,
-        units: unitsSC,
-        owner: ownerSC,
+        quantity: quantitySC,
+        initialRgtOwner: initialRgtOwnerSC,
         created,
       } = await this.registry.registeredBatches(newBatch.serialNumber);
 
@@ -101,13 +94,13 @@ contract('RheaGeRegistry Test', ([
       projectIdSC.should.be.bignumber.equal(newBatch.projectId);
       vintageSC.should.be.equal(newBatch.vintage);
       cresitTypeSC.should.be.equal(newBatch.creditType);
-      unitsSC.should.be.bignumber.equal(newBatch.units);
-      ownerSC.should.be.equal(newBatch.batchOwner);
+      quantitySC.should.be.bignumber.equal(newBatch.quantity);
+      initialRgtOwnerSC.should.be.equal(rgtReceiver);
       created.should.be.equal(true);
 
       const receiverBalAfter = await this.rheaGe.balanceOf(rgtReceiver);
-      receiverBalAfter.sub(receiverBalBefore).should.be.bignumber.equal(newBatch.units);
-      receiverBalAfter.sub(receiverBalBefore).should.be.bignumber.equal(unitsSC);
+      receiverBalAfter.sub(receiverBalBefore).should.be.bignumber.equal(newBatch.quantity);
+      receiverBalAfter.sub(receiverBalBefore).should.be.bignumber.equal(quantitySC);
     });
 
     it('should should NOT generate the same batch twice', async function () {
@@ -119,58 +112,59 @@ contract('RheaGeRegistry Test', ([
       await this.registry.generateBatch(
         ...Object.values(newBatch),
         rgtReceiver,
-        { from: minter }
+        { from: certifier }
       ).should.be.fulfilled;
 
       await this.registry.generateBatch(
         ...Object.values(newBatch),
         rgtReceiver,
-        { from: minter }
+        { from: certifier }
       ).should.be.rejectedWith('RGRegistry::generateBatch: Batch already created');
     });
   });
 
-  describe('#offset()', async () => {
+  describe('#retire()', async () => {
     // eslint-disable-next-line max-len
-    it('should offset, burn the correct amount of tokens and change clients balance appropriately when called by any client', async function () {
+    it('should retire, burn the correct amount of tokens and change clients balance appropriately when called by any client', async function () {
       const newBatch = {
         ...batchDataBase,
         serialNumber: '3331233',
       };
       const tokenAmtBought = new BigNumber(350);
-      const tokenAmtOffset1 = new BigNumber(7);
-      const tokenAmtOffset2 = new BigNumber(179);
+      const tokenAmtRetire1 = new BigNumber(7);
+      const tokenAmtRetire2 = new BigNumber(179);
 
       await this.registry.generateBatch(
         ...Object.values(newBatch),
         rgtReceiver,
-        { from: minter }
+        { from: certifier }
       ).should.be.fulfilled;
 
       await this.rheaGe.transfer(offsetter1, tokenAmtBought, { from: rgtReceiver });
 
       const offsetterBalanceBefore = await this.rheaGe.balanceOf(offsetter1);
 
-      await this.registry.offset(tokenAmtOffset1, { from: offsetter1 }).should.be.fulfilled;
+      await this.registry.retire(tokenAmtRetire1, { from: offsetter1 }).should.be.fulfilled;
 
       // for checking proper storage updates
-      await this.registry.offset(tokenAmtOffset2, { from: rgtReceiver }).should.be.fulfilled;
+      await this.registry.retire(tokenAmtRetire2, { from: rgtReceiver }).should.be.fulfilled;
 
       const offsetterBalanceAfter = await this.rheaGe.balanceOf(offsetter1);
 
-      offsetterBalanceBefore.sub(offsetterBalanceAfter).should.be.bignumber.equal(tokenAmtOffset1);
-      offsetterBalanceAfter.should.be.bignumber.equal(tokenAmtBought.sub(tokenAmtOffset1));
+      offsetterBalanceBefore.sub(offsetterBalanceAfter).should.be.bignumber.equal(tokenAmtRetire1);
+      offsetterBalanceAfter.should.be.bignumber.equal(tokenAmtBought.sub(tokenAmtRetire1));
 
       const retiredBalanceClient1 = await this.registry.retiredBalances(offsetter1);
       const retiredBalanceClient2 = await this.registry.retiredBalances(rgtReceiver);
       const totalSupplyRetired = await this.registry.totalSupplyRetired();
 
-      retiredBalanceClient1.should.be.bignumber.equal(tokenAmtOffset1);
-      retiredBalanceClient2.should.be.bignumber.equal(tokenAmtOffset2);
-      totalSupplyRetired.should.be.bignumber.equal(tokenAmtOffset1.add(tokenAmtOffset2));
+      retiredBalanceClient1.should.be.bignumber.equal(tokenAmtRetire1);
+      retiredBalanceClient2.should.be.bignumber.equal(tokenAmtRetire2);
+      totalSupplyRetired.should.be.bignumber.equal(tokenAmtRetire1.add(tokenAmtRetire2));
     });
 
     // TODO: add more tests here !!! (i.e. does it add up to retiredBalanced if a client offsets multiple times?)
+    // TODO: also test `addProject()`
   });
 
   // TODO: test access to each function
@@ -189,5 +183,10 @@ contract('RheaGeRegistry Test', ([
     await this.registry.setRheaGeToken(this.rheaGe.address, { from: governor });
     const tokenAddressReSet = await this.registry.rheaGeToken();
     tokenAddressReSet.should.be.equal(this.rheaGe.address);
+  });
+
+  it('should NOT initialize twice', async function () {
+    await this.registry.init(this.rheaGe.address, this.roleManager.address)
+      .should.be.rejectedWith('Initializable: contract is already initialized');
   });
 });

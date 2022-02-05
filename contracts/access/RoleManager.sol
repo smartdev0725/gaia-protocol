@@ -3,6 +3,7 @@ pragma solidity ^0.8.11;
 
 import "./IRoleManager.sol";
 import "./Roles.sol";
+import "./RoleNames.sol";
 
 
 /**
@@ -12,15 +13,8 @@ import "./Roles.sol";
  * contract initizlizing logic, trade settlement are restricted to accounts that
  * have valid roles. See docs/SystemAccess.md for more details about roles
  */
-contract RoleManager is IRoleManager {
+contract RoleManager is RoleNames, IRoleManager {
     using Roles for Roles.Role;
-
-    /**
-     * @dev > Important: these have to match with the ones on RoleAware.sol
-    */
-    bytes32 public constant GOVERNOR_ROLE = "GOVERNOR_ROLE";
-    bytes32 public constant MINTER_ROLE = "MINTER_ROLE";
-    bytes32 public constant BURNER_ROLE = "BURNER_ROLE";
 
     /**
      * @notice Event fired upon adding a role for an address.
