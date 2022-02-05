@@ -1,45 +1,24 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.11;
 
-import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import "@openzeppelin/contracts-upgradeable/token/ERC20/utils/SafeERC20Upgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/token/ERC20/IERC20Upgradeable.sol";
 import "../access/RoleAware.sol";
 import "../tokens/rgt/IRheaGeToken.sol";
 import "./IRGRegistry.sol";
-import "../tokens/validation/ITokenValidator.sol";
+import "./RGRegistryStorage.sol";
 
 
-contract RGRegistry is RoleAware, IRGRegistry {
-    using SafeERC20 for IERC20;
+contract RGRegistry is RGRegistryStorage, IRGRegistry {
 
-    // TODO: which fields do we need here ??
-    struct CCBatch {
-        string serialNumber;
-        uint256 projectId;
-        string vintage;
-        string creditType;
-        uint256 units;
-        address owner;
-        bool created;
-    }
-
-    address public rheaGeToken;
-
-    mapping(string => CCBatch) public registeredBatches;
-    mapping(address => uint256) public retiredBalances;
-    uint256 public totalSupplyRetired;
-
-    address public tokenValidator;
-
-    constructor(
+    function init(
         address _rheaGeToken,
-        address _roleManager,
-        address _tokenValidator
-    ) {
+        address _roleManager
+    // TODO: proxy: figure out a good way to make this only callable by a Router
+    ) external override onlyRouter initializer {
         require(_rheaGeToken != address(0), "RGRegistry: zero address passed as _rheaGeToken");
-        require(_tokenValidator != address(0), "RGRegistry: zero address passed as _paymentManager");
         rheaGeToken = _rheaGeToken;
         setRoleManager(_roleManager);
-        tokenValidator = _tokenValidator;
     }
 
     function generateBatch(
@@ -47,9 +26,9 @@ contract RGRegistry is RoleAware, IRGRegistry {
         uint256 projectId,
         string calldata vintage,
         string calldata creditType,
-        uint256 units,
-        address batchOwner
-    ) external override onlyRole(MINTER_ROLE) {
+        uint256 quantity,
+        address mintTo
+    ) external override onlyRole(CERTIFIER_ROLE) onlyRouter {
         require(!registeredBatches[serialNumber].created, "RGRegistry::generateBatch: Batch already created");
 
         registeredBatches[serialNumber] = CCBatch(
@@ -57,8 +36,8 @@ contract RGRegistry is RoleAware, IRGRegistry {
             projectId,
             vintage,
             creditType,
-            units,
-            batchOwner,
+            quantity,
+            mintTo,
             true
         );
 
@@ -67,113 +46,57 @@ contract RGRegistry is RoleAware, IRGRegistry {
             projectId,
             vintage,
             creditType,
-            units,
-            batchOwner,
+            quantity,
+            mintTo,
             msg.sender
         );
 
-        IRheaGeToken(rheaGeToken).mint(address(this), units);
+        IRheaGeToken(rheaGeToken).mint(mintTo, quantity);
     }
 
-    // TODO: who calls this function? who is msg.sender ?? how should we guard it if at all ??
-    function purchase(
-        address paymentToken,
-        uint256 paymentAmount,
-        uint256 rgtAmount
-    ) external payable override {
-        // TODO: what other checks do we need ??
-        // TODO: what other logic do we need here ??
+    function addProject(
+        uint256 id,
+        string calldata name,
+        string calldata projectType,
+        string calldata certifications
+    ) external override onlyRole(CERTIFIER_ROLE) onlyRouter {
+        require(!registeredProjects[id].created, "RGRegistry::addProject: project has already been created");
 
-        // TODO: !IMPORTANT! this is a TEMPORARY solution provided for backend prototype testing!
-        // TODO: if puchase() functionality to be here for MVP version - we need to think on
-        // TODO: how to handle this !!!
-        if (paymentAmount != 0) {
-            collectPayment(
-                msg.sender,
-                address(this),
-                paymentToken,
-                paymentAmount
-            );
-        }
-
-        require(
-            IRheaGeToken(rheaGeToken).transfer(msg.sender, rgtAmount),
-            "RGRegistry::purchase: RheaGeToken::transfer failed"
+        registeredProjects[id] = CCProject(
+            name,
+            projectType,
+            certifications,
+            true
         );
 
-        emit InitialPurchase(msg.sender, rgtAmount);
+        emit ProjectAdded(id, name, projectType, certifications, msg.sender);
     }
 
-    function offset(
+    function retire(
         uint256 carbonTokenAmount
-    ) external override {
+    ) external override onlyRouter {
         IRheaGeToken(rheaGeToken).burn(msg.sender, carbonTokenAmount);
         unchecked {
             retiredBalances[msg.sender] += carbonTokenAmount;
             totalSupplyRetired += carbonTokenAmount;
         }
 
-        emit OffsetAndBurned(msg.sender, carbonTokenAmount);
+        emit Retired(msg.sender, carbonTokenAmount);
     }
 
-    // TODO: should we make a better guard or none at all ??
-    // TODO: this function should probably be in Registry
-    function collectPayment(
-        address from,
-        address to,
-        address tokenAddress,
-        uint256 amount
-    ) internal {
-        bool isEther = ITokenValidator(tokenValidator).validateToken(tokenAddress);
-        uint256 paymentAmount = isEther ? msg.value : amount;
-        // TODO: if payment with zero is decided to stay here - think if this line is needed !!
-        require(paymentAmount != 0, "RGRegistry::collectPayment: no payment provided");
-
-        if (isEther) {
-            require(
-                msg.value == amount,
-                "RGRegistry::collectPayment: incorrect amount has been passed with ETH purchase"
-            );
-        } else {
-            require(
-                msg.value == 0,
-                "RGRegistry::collectPayment: ETH has been sent with an ERC20 purchase"
-            );
-            IERC20(tokenAddress).safeTransferFrom(from, to, paymentAmount);
-        }
-    }
-
-    function withdrawPaidFunds(
-        address to,
-        address token,
-        uint256 amount,
-        bool withdrawAll
-    ) external override onlyRole(GOVERNOR_ROLE) {
-        // TODO: think on the archi of Payments and where should each function be
-        //  this contract vs PaymentManager
-        uint256 toWithdrawAmount;
-        // this returns if token is ETH or not + validates
-        if (ITokenValidator(tokenValidator).validateToken(token)) {
-            toWithdrawAmount = withdrawAll && amount == 0
-                ? address(this).balance
-                : amount;
-
-            (bool success, ) = to.call{value: toWithdrawAmount}("");
-            require(success, "RheaGeRegistry::withdrawPaidFunds: ETH transfer failed");
-        } else {
-            toWithdrawAmount = withdrawAll && amount == 0
-                ? IERC20(token).balanceOf(address(this))
-                : amount;
-
-            IERC20(token).safeTransfer(to, toWithdrawAmount);
-        }
-    }
-
-    function setRheaGeToken(address _rheaGeToken) external override onlyRole(GOVERNOR_ROLE) {
+    function setRheaGeToken(address _rheaGeToken) external override onlyRole(GOVERNOR_ROLE) onlyRouter {
         require(
             _rheaGeToken != address(0),
             "RGRegistry::generateBatch: 0x0 address passed as rheaGeTokenAddress"
         );
         rheaGeToken = _rheaGeToken;
+    }
+
+    function getRegisteredBatch(string calldata serialNumber) external view override onlyRouter returns (CCBatch memory) {
+        return registeredBatches[serialNumber];
+    }
+
+    function getRegisteredProject(uint256 id) external view override onlyRouter returns (CCProject memory) {
+        return registeredProjects[id];
     }
 }
