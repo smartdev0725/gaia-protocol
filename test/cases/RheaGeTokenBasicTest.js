@@ -81,7 +81,7 @@ contract('RheaGeToken Basic Tests', ([
   it('should NOT mint zero amount', async function () {
     const amount = new BigNumber(0);
     await this.rheaGe.mint(moneybag, amount, { from: minter })
-      .should.be.rejectedWith('ERC20: minting zero amount');
+      .should.be.rejectedWith('RheaGeToken: minting zero amount');
   });
 
   it('should NOT mint without MINTER_ROLE', async function () {
@@ -105,7 +105,7 @@ contract('RheaGeToken Basic Tests', ([
   it('should NOT burn zero amount', async function () {
     const amount = new BigNumber(0);
     await this.rheaGe.burn(moneybag, amount, { from: burner })
-      .should.be.rejectedWith('ERC20: burning zero amount');
+      .should.be.rejectedWith('RheaGeToken: burning zero amount');
   });
 
   it('should NOT burn without BURNER_ROLE', async function () {
