@@ -35,6 +35,8 @@ contract('RheaGeToken Basic Tests', ([
   client1,
   client2,
 ]) => {
+  const zeroAddress = '0x0000000000000000000000000000000000000000';
+
   before(async function () {
     const confirmationsRequired = 1;
     this.roleManager = await RoleManager.new([ governor ], confirmationsRequired);
@@ -73,7 +75,6 @@ contract('RheaGeToken Basic Tests', ([
 
   it('should NOT mint to zero address', async function () {
     const amount = new BigNumber(1000);
-    const zeroAddress = '0x0000000000000000000000000000000000000000';
     await this.rheaGe.mint(zeroAddress, amount, { from: minter })
       .should.be.rejectedWith('ERC20: mint to the zero address');
   });
@@ -97,7 +98,6 @@ contract('RheaGeToken Basic Tests', ([
 
   it('should NOT burn from zero address', async function () {
     const amount = new BigNumber(10);
-    const zeroAddress = '0x0000000000000000000000000000000000000000';
     await this.rheaGe.burn(zeroAddress, amount, { from: burner })
       .should.be.rejectedWith('ERC20: burn from the zero address');
   });
@@ -116,7 +116,6 @@ contract('RheaGeToken Basic Tests', ([
 
   it('should NOT transfer to zero address', async function () {
     const amount = new BigNumber(10);
-    const zeroAddress = '0x0000000000000000000000000000000000000000';
     await this.rheaGe.transfer(zeroAddress, amount, { from: moneybag })
       .should.be.rejectedWith('ERC20: transfer to the zero address');
   });
@@ -191,13 +190,23 @@ contract('RheaGeToken Basic Tests', ([
       .should.be.rejectedWith('ERC20: transfer amount exceeds balance');
   });
 
-  it.skip('should NOT transfer from locked address', async () => {
+  it('should find and match Transfer (mint) event', async function () {
+    const amount = new BigNumber(20);
+    await this.rheaGe.mint(moneybag, amount, { from: minter }).should.be.fulfilled;
 
+    const transferEvent = (await this.rheaGe.getPastEvents('Transfer')).at(-1).args;
+    transferEvent.from.should.be.equal(zeroAddress);
+    transferEvent.to.should.be.equal(moneybag);
+    transferEvent.value.should.be.bignumber.equal(amount);
   });
 
-  it.skip('should NOT transferFrom from locked address', async () => {
+  it('should find and match Transfer (burn) event', async function () {
+    const amount = new BigNumber(10);
+    await this.rheaGe.burn(moneybag, amount, { from: burner }).should.be.fulfilled;
 
+    const transferEvent = (await this.rheaGe.getPastEvents('Transfer')).at(-1).args;
+    transferEvent.from.should.be.equal(moneybag);
+    transferEvent.to.should.be.equal(zeroAddress);
+    transferEvent.value.should.be.bignumber.equal(amount);
   });
-
-  // TODO: test access and other functionality
 });
