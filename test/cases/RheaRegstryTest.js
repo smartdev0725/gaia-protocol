@@ -1,6 +1,7 @@
 import {
   getChaiBN,
   BigNumber,
+  sha3,
 } from '@nomisma/nomisma-smart-contract-helpers';
 import { deployRegistry } from '../helpers/registry';
 import { deployRheaGeToken } from '../helpers/rgt';
@@ -34,6 +35,7 @@ contract('RheaGeRegistry Test', ([
     creditType: 'creditType', // TODO: what should this look like ??
     quantity: new BigNumber(10000),
   };
+  const zeroAddress = '0x0000000000000000000000000000000000000000';
 
   before(async function () {
     this.roleManager = await RoleManager.new([ governor ], '1');
@@ -204,7 +206,7 @@ contract('RheaGeRegistry Test', ([
 
     it('should addProject with CERTIFIER_ROLE', async function () {
       const projectData = {
-        id: 1,
+        projectId: new BigNumber(1),
         projectName: 'test',
         projectType: 'test',
         certifications: 'test',
@@ -217,7 +219,7 @@ contract('RheaGeRegistry Test', ([
 
     it('should NOT addProject with the same id', async function () {
       const projectData = {
-        id: 10,
+        projectId: new BigNumber(10),
         projectName: 'test',
         projectType: 'test',
         certifications: 'test',
@@ -234,7 +236,7 @@ contract('RheaGeRegistry Test', ([
 
     it('should NOT addProject without CERTIFIER_ROLE', async function () {
       const projectData = {
-        id: 2,
+        projectId: new BigNumber(2),
         projectName: 'test',
         projectType: 'test',
         certifications: 'test',
@@ -253,7 +255,6 @@ contract('RheaGeRegistry Test', ([
     });
 
     it('should NOT setRheaGeToken to zero address', async function () {
-      const zeroAddress = '0x0000000000000000000000000000000000000000';
       await this.registry.setRheaGeToken(
         zeroAddress,
         { from: governor }
@@ -277,35 +278,64 @@ contract('RheaGeRegistry Test', ([
   });
 
   describe('Events', () => {
-    it('should find and match BatchGenerated event', async function () {
+    it('should find and match BatchGenerated and Transfer (mint) events', async function () {
       const newBatch = {
         ...batchDataBase,
         serialNumber: '3',
+        quantity: new BigNumber(1000123),
       };
-      const tx = await this.registry.generateBatch(
+      await this.registry.generateBatch(
         ...Object.values(newBatch),
         rgtReceiver,
         { from: certifier1 }
       ).should.be.fulfilled;
-      const batchEvent = tx.receipt.logs.find(x => x.event === 'BatchGenerated').args;
-      batchEvent.serialNumber.should.be.equal(newBatch.serialNumber);
-      batchEvent.projectId.should.be.bignumber.equal(newBatch.projectId);
-      // TODO find a way to match the values below
-      // batchEvent.vintage.should.be.bignumber.equal(newBatch.vintage);
-      // batchEvent.creditType.should.be.bignumber.equal(newBatch.creditType);
-      batchEvent.quantity.should.be.bignumber.equal(newBatch.quantity);
-      batchEvent.initialRgtOwner.should.be.equal(rgtReceiver);
-      batchEvent.certifier.should.be.equal(certifier1);
-      // console.log(batchEvent);
+      const bartchGeneratedEvent = (await this.registry.getPastEvents('BatchGenerated')).at(-1).args;
+      bartchGeneratedEvent.serialNumber.should.be.equal(newBatch.serialNumber);
+      bartchGeneratedEvent.projectId.should.be.bignumber.equal(newBatch.projectId);
+      bartchGeneratedEvent.vintage.should.be.equal(sha3(newBatch.vintage)); // indexed
+      bartchGeneratedEvent.creditType.should.be.equal(sha3(newBatch.creditType)); // indexed
+      bartchGeneratedEvent.quantity.should.be.bignumber.equal(newBatch.quantity);
+      bartchGeneratedEvent.initialRgtOwner.should.be.equal(rgtReceiver);
+      bartchGeneratedEvent.certifier.should.be.equal(certifier1);
+
+      const transferEvent = (await this.rheaGe.getPastEvents('Transfer')).at(-1).args;
+      transferEvent.from.should.be.equal(zeroAddress);
+      transferEvent.to.should.be.equal(rgtReceiver);
+      transferEvent.value.should.be.bignumber.equal(newBatch.quantity);
     });
 
-    // it('should find ProjectAdded event', async function () {
+    it('should find and match ProjectAdded event', async function () {
+      const projectData = {
+        projectId: new BigNumber(3),
+        projectName: 'test project name',
+        projectType: 'test project type',
+        certifications: 'test certifications',
+      };
+      await this.registry.addProject(
+        ...Object.values(projectData),
+        { from: certifier1 }
+      ).should.be.fulfilled;
+      const projectAddedEvent = (await this.registry.getPastEvents('ProjectAdded')).at(-1).args;
+      projectAddedEvent.projectId.should.be.bignumber.equal(projectData.projectId);
+      projectAddedEvent.projectName.should.be.equal(projectData.projectName);
+      projectAddedEvent.projectType.should.be.equal(sha3(projectData.projectType)); // indexed
+      projectAddedEvent.certifications.should.be.equal(projectData.certifications);
+      projectAddedEvent.certifier.should.be.equal(certifier1);
+    });
 
-    // });
+    it('should find Transer (burn) and Retired events', async function () {
+      const tokenAmount = new BigNumber(123);
+      await this.registry.retire(tokenAmount, { from: rgtReceiver }).should.be.fulfilled;
 
-    // it('should find Transer, Retired events', async function () {
+      const transferEvent = (await this.rheaGe.getPastEvents('Transfer')).at(-1).args;
+      transferEvent.from.should.be.equal(rgtReceiver);
+      transferEvent.to.should.be.equal(zeroAddress);
+      transferEvent.value.should.be.bignumber.equal(tokenAmount);
 
-    // });
+      const retiredEvent = (await this.registry.getPastEvents('Retired')).at(-1).args;
+      retiredEvent.holder.should.be.equal(rgtReceiver);
+      retiredEvent.amount.should.be.bignumber.equal(tokenAmount);
+    });
   });
 
   it('should NOT initialize twice', async function () {
