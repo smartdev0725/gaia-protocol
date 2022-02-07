@@ -38,7 +38,7 @@ contract RGRegistry is RGRegistryStorage, IRGRegistry {
             creditType,
             quantity,
             mintTo,
-            true
+            true // created
         );
 
         emit BatchGenerated(
@@ -48,28 +48,34 @@ contract RGRegistry is RGRegistryStorage, IRGRegistry {
             creditType,
             quantity,
             mintTo,
-            msg.sender
+            msg.sender // certifier
         );
 
         IRheaGeToken(rheaGeToken).mint(mintTo, quantity);
     }
 
     function addProject(
-        uint256 id,
-        string calldata name,
+        uint256 projectId,
+        string calldata projectName,
         string calldata projectType,
         string calldata certifications
     ) external override onlyRole(CERTIFIER_ROLE) onlyRouter {
-        require(!registeredProjects[id].created, "RGRegistry::addProject: project has already been created");
+        require(!registeredProjects[projectId].created, "RGRegistry::addProject: project has already been created");
 
-        registeredProjects[id] = CCProject(
-            name,
+        registeredProjects[projectId] = CCProject(
+            projectName,
             projectType,
             certifications,
-            true
+            true // created
         );
 
-        emit ProjectAdded(id, name, projectType, certifications, msg.sender);
+        emit ProjectAdded(
+            projectId,
+            projectName,
+            projectType,
+            certifications,
+            msg.sender // certifier
+        );
     }
 
     function retire(
@@ -81,14 +87,16 @@ contract RGRegistry is RGRegistryStorage, IRGRegistry {
             totalSupplyRetired += carbonTokenAmount;
         }
 
-        emit Retired(msg.sender, carbonTokenAmount);
+        emit Retired(
+            msg.sender, // holder
+            carbonTokenAmount
+        );
     }
 
     function setRheaGeToken(address _rheaGeToken) external override onlyRole(GOVERNOR_ROLE) onlyRouter {
-        require(
-            _rheaGeToken != address(0),
-            "RGRegistry::generateBatch: 0x0 address passed as rheaGeTokenAddress"
-        );
+        require(IRheaGeToken(_rheaGeToken).totalSupply() >= 0, "RGRegistry::setRheaGeToken: totalSupply is missing");
+        require(IRheaGeToken(_rheaGeToken).decimals() > 0, "RGRegistry::setRheaGeToken: decimals is missing");
+        // TODO should be set only once?
         rheaGeToken = _rheaGeToken;
     }
 

@@ -16,8 +16,8 @@ interface IRGRegistryStorage is Structs {
     );
 
     event ProjectAdded(
-        uint256 id,
-        string name,
+        uint256 projectId,
+        string projectName,
         string indexed projectType,
         string certifications,
         address indexed certifier

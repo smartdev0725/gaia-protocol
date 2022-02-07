@@ -14,7 +14,7 @@ interface Structs {
     }
 
     struct CCProject {
-        string name;
+        string projectName;
         string projectType;
         string certifications;
         bool created;
