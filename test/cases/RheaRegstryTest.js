@@ -189,7 +189,7 @@ contract('RheaGeRegistry Test', ([
         { from: certifier2 }
       ).should.be.fulfilled;
     });
-    
+
     it('should NOT generateBatch without CERTIFIER_ROLE', async function () {
       const newBatch = {
         ...batchDataBase,
@@ -208,7 +208,7 @@ contract('RheaGeRegistry Test', ([
         projectName: 'test',
         projectType: 'test',
         certifications: 'test',
-      }
+      };
       await this.registry.addProject(
         ...Object.values(projectData),
         { from: certifier1 }
@@ -221,7 +221,7 @@ contract('RheaGeRegistry Test', ([
         projectName: 'test',
         projectType: 'test',
         certifications: 'test',
-      }
+      };
       await this.registry.addProject(
         ...Object.values(projectData),
         { from: certifier1 }
@@ -238,7 +238,7 @@ contract('RheaGeRegistry Test', ([
         projectName: 'test',
         projectType: 'test',
         certifications: 'test',
-      }
+      };
       await this.registry.addProject(
         ...Object.values(projectData),
         { from: governor }
@@ -298,14 +298,14 @@ contract('RheaGeRegistry Test', ([
       batchEvent.certifier.should.be.equal(certifier1);
       // console.log(batchEvent);
     });
-    
-    it('should find ProjectAdded event', async function () {
 
-    });
+    // it('should find ProjectAdded event', async function () {
 
-    it('should find Transer, Retired events', async function () {
+    // });
 
-    });
+    // it('should find Transer, Retired events', async function () {
+
+    // });
   });
 
   it('should NOT initialize twice', async function () {
