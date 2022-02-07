@@ -22,9 +22,9 @@ const {
 
 contract('RheaGeRegistry Test', ([
   governor,
-  certifier,
+  certifier1,
+  certifier2,
   offsetter1,
-  rheaGeTokenMock,
   rgtReceiver,
 ]) => {
   const batchDataBase = {
@@ -47,11 +47,13 @@ contract('RheaGeRegistry Test', ([
 
     await this.roleManager.addRolesForAddresses(
       [
-        certifier,
+        certifier1,
+        certifier2,
         this.registry.address,
         this.registry.address,
       ],
       [
+        CERTIFIER_ROLE,
         CERTIFIER_ROLE,
         MINTER_ROLE,
         BURNER_ROLE,
@@ -62,7 +64,7 @@ contract('RheaGeRegistry Test', ([
     await this.registry.generateBatch(
       ...Object.values(batchDataBase),
       rgtReceiver,
-      { from: certifier }
+      { from: certifier1 }
     );
   });
 
@@ -77,7 +79,7 @@ contract('RheaGeRegistry Test', ([
       await this.registry.generateBatch(
         ...Object.values(newBatch),
         rgtReceiver,
-        { from: certifier }
+        { from: certifier1 }
       ).should.be.fulfilled;
 
       const {
@@ -112,13 +114,13 @@ contract('RheaGeRegistry Test', ([
       await this.registry.generateBatch(
         ...Object.values(newBatch),
         rgtReceiver,
-        { from: certifier }
+        { from: certifier1 }
       ).should.be.fulfilled;
 
       await this.registry.generateBatch(
         ...Object.values(newBatch),
         rgtReceiver,
-        { from: certifier }
+        { from: certifier1 }
       ).should.be.rejectedWith('RGRegistry::generateBatch: Batch already created');
     });
   });
@@ -137,7 +139,7 @@ contract('RheaGeRegistry Test', ([
       await this.registry.generateBatch(
         ...Object.values(newBatch),
         rgtReceiver,
-        { from: certifier }
+        { from: certifier1 }
       ).should.be.fulfilled;
 
       await this.rheaGe.transfer(offsetter1, tokenAmtBought, { from: rgtReceiver });
@@ -164,25 +166,146 @@ contract('RheaGeRegistry Test', ([
     });
 
     // TODO: add more tests here !!! (i.e. does it add up to retiredBalanced if a client offsets multiple times?)
-    // TODO: also test `addProject()`
   });
 
-  // TODO: test access to each function
+  describe('onlyRole access', async () => {
+    it('should generateBatch from multiple certifier accounts', async function () {
+      const newBatch1 = {
+        ...batchDataBase,
+        serialNumber: '1',
+      };
+      await this.registry.generateBatch(
+        ...Object.values(newBatch1),
+        rgtReceiver,
+        { from: certifier1 }
+      ).should.be.fulfilled;
+      const newBatch2 = {
+        ...batchDataBase,
+        serialNumber: '2',
+      };
+      await this.registry.generateBatch(
+        ...Object.values(newBatch2),
+        rgtReceiver,
+        { from: certifier2 }
+      ).should.be.fulfilled;
+    });
+    
+    it('should NOT generateBatch without CERTIFIER_ROLE', async function () {
+      const newBatch = {
+        ...batchDataBase,
+        serialNumber: '3',
+      };
+      await this.registry.generateBatch(
+        ...Object.values(newBatch),
+        rgtReceiver,
+        { from: governor }
+      ).should.be.rejectedWith('RoleAware: Permission denied to execute this function');
+    });
 
-  // TODO: describe('Events', () => {}); test all events on Registry
+    it('should addProject with CERTIFIER_ROLE', async function () {
+      const projectData = {
+        id: 1,
+        projectName: 'test',
+        projectType: 'test',
+        certifications: 'test',
+      }
+      await this.registry.addProject(
+        ...Object.values(projectData),
+        { from: certifier1 }
+      ).should.be.fulfilled;
+    });
 
-  it('should set new rheaGeToken address', async function () {
-    const previousTokenAddress = await this.registry.rheaGeToken();
-    previousTokenAddress.should.be.equal(this.rheaGe.address);
+    it('should NOT addProject with the same id', async function () {
+      const projectData = {
+        id: 10,
+        projectName: 'test',
+        projectType: 'test',
+        certifications: 'test',
+      }
+      await this.registry.addProject(
+        ...Object.values(projectData),
+        { from: certifier1 }
+      ).should.be.fulfilled;
+      await this.registry.addProject(
+        ...Object.values(projectData),
+        { from: certifier1 }
+      ).should.be.rejectedWith('RGRegistry::addProject: project has already been created');
+    });
 
-    await this.registry.setRheaGeToken(rheaGeTokenMock, { from: governor });
-    const tokenAddressAfter = await this.registry.rheaGeToken();
-    tokenAddressAfter.should.be.equal(rheaGeTokenMock);
+    it('should NOT addProject without CERTIFIER_ROLE', async function () {
+      const projectData = {
+        id: 2,
+        projectName: 'test',
+        projectType: 'test',
+        certifications: 'test',
+      }
+      await this.registry.addProject(
+        ...Object.values(projectData),
+        { from: governor }
+      ).should.be.rejectedWith('RoleAware: Permission denied to execute this function');
+    });
 
-    // set it back so other tests work
-    await this.registry.setRheaGeToken(this.rheaGe.address, { from: governor });
-    const tokenAddressReSet = await this.registry.rheaGeToken();
-    tokenAddressReSet.should.be.equal(this.rheaGe.address);
+    it('should setRheaGeToken with GOVERNOR_ROLE', async function () {
+      await this.registry.setRheaGeToken(
+        this.rheaGe.address,
+        { from: governor }
+      ).should.be.fulfilled;
+    });
+
+    it('should NOT setRheaGeToken to zero address', async function () {
+      const zeroAddress = '0x0000000000000000000000000000000000000000';
+      await this.registry.setRheaGeToken(
+        zeroAddress,
+        { from: governor }
+      ).should.be.rejected;
+    });
+
+    it('should NOT setRheaGeToken if the address is not a contract', async function () {
+      const firstAddress = '0x0000000000000000000000000000000000000001';
+      await this.registry.setRheaGeToken(
+        firstAddress,
+        { from: governor }
+      ).should.be.rejected;
+    });
+
+    it('should NOT setRheaGeToken without GOVERNOR_ROLE', async function () {
+      await this.registry.setRheaGeToken(
+        this.rheaGe.address,
+        { from: certifier1 }
+      ).should.be.rejectedWith('RoleAware: Permission denied to execute this function');
+    });
+  });
+
+  describe('Events', () => {
+    it('should find and match BatchGenerated event', async function () {
+      const newBatch = {
+        ...batchDataBase,
+        serialNumber: '3',
+      };
+      const tx = await this.registry.generateBatch(
+        ...Object.values(newBatch),
+        rgtReceiver,
+        { from: certifier1 }
+      ).should.be.fulfilled;
+      const batchEvent = tx.receipt.logs.find(x => x.event === 'BatchGenerated').args;
+      batchEvent.serialNumber.should.be.equal(newBatch.serialNumber);
+      batchEvent.projectId.should.be.bignumber.equal(newBatch.projectId);
+      // TODO find a way to match the values below
+      // batchEvent.vintage.should.be.bignumber.equal(newBatch.vintage);
+      // batchEvent.creditType.should.be.bignumber.equal(newBatch.creditType);
+      batchEvent.quantity.should.be.bignumber.equal(newBatch.quantity);
+      batchEvent.initialRgtOwner.should.be.equal(rgtReceiver);
+      batchEvent.certifier.should.be.equal(certifier1);
+      // console.log(batchEvent);
+    });
+    
+    it('should find ProjectAdded event', async function () {
+
+    });
+
+    it('should find Transer, Retired events', async function () {
+
+    });
   });
 
   it('should NOT initialize twice', async function () {
