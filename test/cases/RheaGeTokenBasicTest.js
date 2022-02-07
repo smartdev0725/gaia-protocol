@@ -139,6 +139,29 @@ contract('RheaGeToken Basic Tests', ([
       .should.be.fulfilled;
   });
 
+  it('should change allowance', async function () {
+    const allowanceBefore = await this.rheaGe.allowance(moneybag, clientWithoutTokens);
+    const increaseToAmount = new BigNumber(200);
+    await this.rheaGe.approve(clientWithoutTokens, increaseToAmount, { from: moneybag })
+      .should.be.fulfilled;
+    const allowanceAfter = await this.rheaGe.allowance(moneybag, clientWithoutTokens);
+    allowanceBefore.should.be.bignumber.equal(allowanceAfter.sub(increaseToAmount));
+  });
+
+  it('should set allowance to zero', async function () {
+    const initialAmount = new BigNumber(200);
+    await this.rheaGe.approve(clientWithoutTokens, initialAmount, { from: moneybag })
+      .should.be.fulfilled;
+    const allowanceBefore = await this.rheaGe.allowance(moneybag, clientWithoutTokens);
+    allowanceBefore.should.be.bignumber.equal(initialAmount);
+
+    const zeroAmount = new BigNumber(0);
+    await this.rheaGe.approve(clientWithoutTokens, zeroAmount, { from: moneybag })
+      .should.be.fulfilled;
+    const allowanceAfter = await this.rheaGe.allowance(moneybag, clientWithoutTokens);
+    allowanceAfter.should.be.bignumber.equal(zeroAmount);
+  });
+
   it('should approve to spend infinity', async function () {
     const infinity = '0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff';
     await this.rheaGe.approve(client1, infinity, { from: moneybag })
