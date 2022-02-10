@@ -11,14 +11,14 @@ interface IRGRegistryStorage is Structs {
         string indexed vintageEnd,
         string indexed creditType,
         uint256 quantity,
-        string certifications,
+        string certificationsOrObjectives,
         address initialRgtOwner,
         address indexed certifier
     );
 
     event ProjectAdded(
-        uint256 id,
-        string name,
+        uint256 projectId,
+        string projectName,
         string indexed projectType,
         address indexed certifier
     );

@@ -40,7 +40,7 @@ contract RGRegistry is RGRegistryStorage, IRGRegistry {
             quantity,
             certifications,
             mintTo,
-            true
+            true // created
         );
 
         emit BatchGenerated(
@@ -51,38 +51,46 @@ contract RGRegistry is RGRegistryStorage, IRGRegistry {
             quantity,
             certifications,
             mintTo,
-            msg.sender
+            msg.sender // certifier
         );
 
         IRheaGeToken(rheaGeToken).mint(mintTo, quantity);
     }
 
     function addProject(
-        uint256 id,
-        string calldata name,
+        uint256 projectId,
+        string calldata projectName,
         string calldata projectType
     ) external override onlyRole(CERTIFIER_ROLE) onlyRouter {
-        require(!registeredProjects[id].created, "RGRegistry::addProject: project has already been created");
+        require(!registeredProjects[projectId].created, "RGRegistry::addProject: project has already been created");
 
-        registeredProjects[id] = CCProject(
-            name,
+        registeredProjects[projectId] = CCProject(
+            projectName,
             projectType,
-            true
+            true // created
         );
 
-        emit ProjectAdded(id, name, projectType, msg.sender);
+        emit ProjectAdded(
+            projectId,
+            projectName,
+            projectType,
+            msg.sender // certifier
+        );
     }
 
     function retire(
-        uint256 carbonTonAmt
+        uint256 carbonTokenAmount
     ) external override onlyRouter {
-        IRheaGeToken(rheaGeToken).burn(msg.sender, carbonTonAmt);
+        IRheaGeToken(rheaGeToken).burn(msg.sender, carbonTokenAmount);
         unchecked {
-            retiredBalances[msg.sender] += carbonTonAmt;
-            totalSupplyRetired += carbonTonAmt;
+            retiredBalances[msg.sender] += carbonTokenAmount;
+            totalSupplyRetired += carbonTokenAmount;
         }
 
-        emit Retired(msg.sender, carbonTonAmt);
+        emit Retired(
+            msg.sender, // holder
+            carbonTokenAmount
+        );
     }
 
     function setRheaGeToken(address _rheaGeToken) external override onlyRole(GOVERNOR_ROLE) onlyRouter {
@@ -90,6 +98,8 @@ contract RGRegistry is RGRegistryStorage, IRGRegistry {
             _rheaGeToken != address(0),
             "RGRegistry::generateBatch: 0x0 address passed as rheaGeTokenAddress"
         );
+        require(IRheaGeToken(_rheaGeToken).totalSupply() >= 0, "RGRegistry::setRheaGeToken: totalSupply is missing");
+        require(IRheaGeToken(_rheaGeToken).decimals() > 0, "RGRegistry::setRheaGeToken: decimals is missing");
         rheaGeToken = _rheaGeToken;
     }
 

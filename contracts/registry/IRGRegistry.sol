@@ -22,7 +22,7 @@ interface IRGRegistry is Structs {
     ) external;
 
     function addProject(
-        uint256 id,
+        uint256 projectId,
         string calldata name,
         string calldata projectType
     ) external;
@@ -35,5 +35,5 @@ interface IRGRegistry is Structs {
 
     function getRegisteredBatch(string calldata serialNumber) external view returns (CCBatch memory);
 
-    function getRegisteredProject(uint256 id) external view returns (CCProject memory);
+    function getRegisteredProject(uint256 projectId) external view returns (CCProject memory);
 }
