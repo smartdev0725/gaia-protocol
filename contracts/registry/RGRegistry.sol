@@ -24,9 +24,10 @@ contract RGRegistry is RGRegistryStorage, IRGRegistry {
     function generateBatch(
         string calldata serialNumber,
         uint256 projectId,
-        string calldata vintage,
+        string calldata vintageEnd,
         string calldata creditType,
         uint256 quantity,
+        string calldata certifications,
         address mintTo
     ) external override onlyRole(CERTIFIER_ROLE) onlyRouter {
         require(!registeredBatches[serialNumber].created, "RGRegistry::generateBatch: Batch already created");
@@ -34,9 +35,10 @@ contract RGRegistry is RGRegistryStorage, IRGRegistry {
         registeredBatches[serialNumber] = CCBatch(
             serialNumber,
             projectId,
-            vintage,
+            vintageEnd,
             creditType,
             quantity,
+            certifications,
             mintTo,
             true
         );
@@ -44,9 +46,10 @@ contract RGRegistry is RGRegistryStorage, IRGRegistry {
         emit BatchGenerated(
             serialNumber,
             projectId,
-            vintage,
+            vintageEnd,
             creditType,
             quantity,
+            certifications,
             mintTo,
             msg.sender
         );
@@ -57,19 +60,17 @@ contract RGRegistry is RGRegistryStorage, IRGRegistry {
     function addProject(
         uint256 id,
         string calldata name,
-        string calldata projectType,
-        string calldata certifications
+        string calldata projectType
     ) external override onlyRole(CERTIFIER_ROLE) onlyRouter {
         require(!registeredProjects[id].created, "RGRegistry::addProject: project has already been created");
 
         registeredProjects[id] = CCProject(
             name,
             projectType,
-            certifications,
             true
         );
 
-        emit ProjectAdded(id, name, projectType, certifications, msg.sender);
+        emit ProjectAdded(id, name, projectType, msg.sender);
     }
 
     function retire(

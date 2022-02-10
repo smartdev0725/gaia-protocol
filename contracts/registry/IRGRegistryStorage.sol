@@ -8,9 +8,10 @@ interface IRGRegistryStorage is Structs {
     event BatchGenerated(
         string serialNumber,
         uint256 projectId,
-        string indexed vintage,
+        string indexed vintageEnd,
         string indexed creditType,
         uint256 quantity,
+        string certifications,
         address initialRgtOwner,
         address indexed certifier
     );
@@ -19,7 +20,6 @@ interface IRGRegistryStorage is Structs {
         uint256 id,
         string name,
         string indexed projectType,
-        string certifications,
         address indexed certifier
     );
 

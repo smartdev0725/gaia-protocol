@@ -14,17 +14,17 @@ interface IRGRegistry is Structs {
     function generateBatch(
         string calldata serialNumber,
         uint256 projectId,
-        string calldata vintage,
+        string calldata vintageEnd,
         string calldata creditType,
         uint256 quantity,
+        string calldata certifications,
         address mintTo
     ) external;
 
     function addProject(
         uint256 id,
         string calldata name,
-        string calldata projectType,
-        string calldata certifications
+        string calldata projectType
     ) external;
 
     function retire(
