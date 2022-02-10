@@ -24,9 +24,10 @@ contract RGRegistry is RGRegistryStorage, IRGRegistry {
     function generateBatch(
         string calldata serialNumber,
         uint256 projectId,
-        string calldata vintage,
+        string calldata vintageEnd,
         string calldata creditType,
         uint256 quantity,
+        string calldata certifications,
         address mintTo
     ) external override onlyRole(CERTIFIER_ROLE) onlyRouter {
         require(!registeredBatches[serialNumber].created, "RGRegistry::generateBatch: Batch already created");
@@ -34,9 +35,10 @@ contract RGRegistry is RGRegistryStorage, IRGRegistry {
         registeredBatches[serialNumber] = CCBatch(
             serialNumber,
             projectId,
-            vintage,
+            vintageEnd,
             creditType,
             quantity,
+            certifications,
             mintTo,
             true // created
         );
@@ -44,9 +46,10 @@ contract RGRegistry is RGRegistryStorage, IRGRegistry {
         emit BatchGenerated(
             serialNumber,
             projectId,
-            vintage,
+            vintageEnd,
             creditType,
             quantity,
+            certifications,
             mintTo,
             msg.sender // certifier
         );
@@ -57,15 +60,13 @@ contract RGRegistry is RGRegistryStorage, IRGRegistry {
     function addProject(
         uint256 projectId,
         string calldata projectName,
-        string calldata projectType,
-        string calldata certifications
+        string calldata projectType
     ) external override onlyRole(CERTIFIER_ROLE) onlyRouter {
         require(!registeredProjects[projectId].created, "RGRegistry::addProject: project has already been created");
 
         registeredProjects[projectId] = CCProject(
             projectName,
             projectType,
-            certifications,
             true // created
         );
 
@@ -73,7 +74,6 @@ contract RGRegistry is RGRegistryStorage, IRGRegistry {
             projectId,
             projectName,
             projectType,
-            certifications,
             msg.sender // certifier
         );
     }
@@ -94,7 +94,10 @@ contract RGRegistry is RGRegistryStorage, IRGRegistry {
     }
 
     function setRheaGeToken(address _rheaGeToken) external override onlyRole(GOVERNOR_ROLE) onlyRouter {
-        require(rheaGeToken == address(0), "RGRegistry::setRheaGeToken: address of RheaGeToken must be set only once");
+        require(
+            _rheaGeToken != address(0),
+            "RGRegistry::generateBatch: 0x0 address passed as rheaGeTokenAddress"
+        );
         require(IRheaGeToken(_rheaGeToken).totalSupply() >= 0, "RGRegistry::setRheaGeToken: totalSupply is missing");
         require(IRheaGeToken(_rheaGeToken).decimals() > 0, "RGRegistry::setRheaGeToken: decimals is missing");
         rheaGeToken = _rheaGeToken;
