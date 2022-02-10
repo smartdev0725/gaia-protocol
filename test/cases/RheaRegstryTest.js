@@ -27,12 +27,20 @@ contract('RheaGeRegistry Test', ([
   rheaGeTokenMock,
   rgtReceiver,
 ]) => {
+  const projectId = new BigNumber('1748');
   const batchDataBase = {
-    serialNumber: '1234567',
-    projectId: new BigNumber(777),
-    vintage: 'vintage', // TODO: what should this look like ??
-    creditType: 'creditType', // TODO: what should this look like ??
+    serialNumber: '1234567-D81FA-3772',
+    projectId,
+    vintageEnd: '01-12-2019',
+    creditType: 'VCU',
     quantity: new BigNumber(10000),
+    certifications: '01: No Poverty; 02: Zero Hunger; 03: Good Health and Well-being;',
+  };
+
+  const projectDataBase = {
+    projectId,
+    name: 'Southern Cardamom REDD+ Project',
+    projectType: 'Agriculture Forestry and Other Land Use',
   };
 
   before(async function () {
@@ -83,7 +91,7 @@ contract('RheaGeRegistry Test', ([
       const {
         serialNumber: serialNumberSC,
         projectId: projectIdSC,
-        vintage: vintageSC,
+        vintageEnd: vintageEndSC,
         creditType: cresitTypeSC,
         quantity: quantitySC,
         initialRgtOwner: initialRgtOwnerSC,
@@ -92,7 +100,7 @@ contract('RheaGeRegistry Test', ([
 
       serialNumberSC.should.be.equal(newBatch.serialNumber);
       projectIdSC.should.be.bignumber.equal(newBatch.projectId);
-      vintageSC.should.be.equal(newBatch.vintage);
+      vintageEndSC.should.be.equal(newBatch.vintageEnd);
       cresitTypeSC.should.be.equal(newBatch.creditType);
       quantitySC.should.be.bignumber.equal(newBatch.quantity);
       initialRgtOwnerSC.should.be.equal(rgtReceiver);
@@ -165,6 +173,23 @@ contract('RheaGeRegistry Test', ([
 
     // TODO: add more tests here !!! (i.e. does it add up to retiredBalanced if a client offsets multiple times?)
     // TODO: also test `addProject()`
+  });
+
+  it('#addProject() should write project to storage', async function () {
+    await this.registry.addProject(
+      ...Object.values(projectDataBase),
+      { from: certifier }
+    ).should.be.fulfilled;
+
+    const {
+      name,
+      projectType,
+      created,
+    } = await this.registry.registeredProjects(projectDataBase.projectId);
+
+    name.should.be.equal(projectDataBase.name);
+    projectType.should.be.equal(projectDataBase.projectType);
+    created.should.be.equal(true);
   });
 
   // TODO: test access to each function
