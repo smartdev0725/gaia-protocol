@@ -56,7 +56,7 @@ contract('RheaGeToken Upgrade Tests', ([
 
     await this.resolver.bulkRegister(
       [ signature ],
-      [ this.rheaGeUpgradedMock.address ],
+      [ this.rheaGe.address ],
       { from: governor }
     ).should.be.fulfilled;
 
