@@ -94,6 +94,7 @@ contract('RheaGeRegistry Test', ([
         vintageEnd: vintageEndSC,
         creditType: cresitTypeSC,
         quantity: quantitySC,
+        certificationsOrObjectives: certificationsOrObjectivesSC,
         initialRgtOwner: initialRgtOwnerSC,
         created,
       } = await this.registry.registeredBatches(newBatch.serialNumber);
@@ -104,6 +105,7 @@ contract('RheaGeRegistry Test', ([
       cresitTypeSC.should.be.equal(newBatch.creditType);
       quantitySC.should.be.bignumber.equal(newBatch.quantity);
       initialRgtOwnerSC.should.be.equal(rgtReceiver);
+      certificationsOrObjectivesSC.should.be.equal(newBatch.certifications);
       created.should.be.equal(true);
 
       const receiverBalAfter = await this.rheaGe.balanceOf(rgtReceiver);
