@@ -11,7 +11,7 @@ interface IRGRegistryStorage is Structs {
         string indexed vintageEnd,
         string indexed creditType,
         uint256 quantity,
-        string certifications,
+        string certificationsOrObjectives,
         address initialRgtOwner,
         address indexed certifier
     );
