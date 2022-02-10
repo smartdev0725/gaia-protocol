@@ -94,9 +94,9 @@ contract RGRegistry is RGRegistryStorage, IRGRegistry {
     }
 
     function setRheaGeToken(address _rheaGeToken) external override onlyRole(GOVERNOR_ROLE) onlyRouter {
+        require(rheaGeToken == address(0), "RGRegistry::setRheaGeToken: address of RheaGeToken must be set only once");
         require(IRheaGeToken(_rheaGeToken).totalSupply() >= 0, "RGRegistry::setRheaGeToken: totalSupply is missing");
         require(IRheaGeToken(_rheaGeToken).decimals() > 0, "RGRegistry::setRheaGeToken: decimals is missing");
-        // TODO should be set only once?
         rheaGeToken = _rheaGeToken;
     }
 
