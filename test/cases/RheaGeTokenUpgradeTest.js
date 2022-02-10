@@ -24,6 +24,7 @@ const {
 
 const RoleManager = artifacts.require('./RoleManager.sol');
 const Resolver = artifacts.require('./Resolver.sol');
+const RheaGeUpgradedMock = artifacts.require('./RheaGeUpgradedMock.sol');
 
 export const tokenName = 'RheaGe Token';
 export const tokenSymbol = 'RGT';
@@ -45,7 +46,7 @@ contract('RheaGeToken Upgrade Tests', ([
     );
     this.rheaGe = await deployRheaGeToken(this.roleManager.address, governor);
     this.resolver = await Resolver.new(this.roleManager.address);
-    this.rheaGeUpgradedMock = await deployRheaGeUpgradedMock(this.roleManager.address, governor);
+    this.rheaGeUpgradedMock = await RheaGeUpgradedMock.new()
   });
 
   it.only('should upgrade rheaGeToken', async function () {
