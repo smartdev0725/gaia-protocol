@@ -182,17 +182,17 @@ contract('RheaGeRegistry Test', ([
 
       const retireAmount = new BigNumber(2);
       let balanceBefore = await this.registry.retiredBalances(rgtReceiver);
-      
+
       await this.registry.retire(retireAmount, { from: rgtReceiver }).should.be.fulfilled;
       let balance = await this.registry.retiredBalances(rgtReceiver);
       balance.should.be.bignumber.equal(balanceBefore.add(retireAmount));
 
-      balanceBefore = balanceBefore.add(retireAmount)
+      balanceBefore = balanceBefore.add(retireAmount);
       await this.registry.retire(retireAmount, { from: rgtReceiver }).should.be.fulfilled;
       balance = await this.registry.retiredBalances(rgtReceiver);
       balance.should.be.bignumber.equal(balanceBefore.add(retireAmount));
 
-      balanceBefore = balanceBefore.add(retireAmount)
+      balanceBefore = balanceBefore.add(retireAmount);
       await this.registry.retire(retireAmount, { from: rgtReceiver }).should.be.fulfilled;
       balance = await this.registry.retiredBalances(rgtReceiver);
       balance.should.be.bignumber.equal(balanceBefore.add(retireAmount));
@@ -280,7 +280,7 @@ contract('RheaGeRegistry Test', ([
       await this.registry.setRheaGeToken(
         this.rheaGe.address,
         { from: governor }
-      ).should.be.rejectedWith("RGRegistry::setRheaGeToken: address of RheaGeToken must be set only once");
+      ).should.be.rejectedWith('RGRegistry::setRheaGeToken: address of RheaGeToken must be set only once');
     });
 
     it('should NOT setRheaGeToken to zero address', async function () {
@@ -381,13 +381,13 @@ contract('RheaGeRegistry Test', ([
         { from: certifier1 }
       ).should.be.fulfilled;
       const registeredBatch = await this.registry.getRegisteredBatch(newBatch.serialNumber);
-      registeredBatch.serialNumber.should.be.equal(newBatch.serialNumber.toString())
-      registeredBatch.projectId.should.be.equal(newBatch.projectId.toString())
-      registeredBatch.vintage.should.be.equal(newBatch.vintage)
-      registeredBatch.creditType.should.be.equal(newBatch.creditType)
-      registeredBatch.quantity.should.be.equal(newBatch.quantity.toString())
-      registeredBatch.initialRgtOwner.should.be.equal(rgtReceiver)
-      registeredBatch.created.should.be.equal(true)
+      registeredBatch.serialNumber.should.be.equal(newBatch.serialNumber.toString());
+      registeredBatch.projectId.should.be.equal(newBatch.projectId.toString());
+      registeredBatch.vintage.should.be.equal(newBatch.vintage);
+      registeredBatch.creditType.should.be.equal(newBatch.creditType);
+      registeredBatch.quantity.should.be.equal(newBatch.quantity.toString());
+      registeredBatch.initialRgtOwner.should.be.equal(rgtReceiver);
+      registeredBatch.created.should.be.equal(true);
     });
 
     it('should getRegisteredProject', async function () {
@@ -402,15 +402,15 @@ contract('RheaGeRegistry Test', ([
         { from: certifier1 }
       ).should.be.fulfilled;
       const registeredProject = await this.registry.getRegisteredProject(projectData.projectId);
-      registeredProject.projectName.should.be.equal(projectData.projectName)
-      registeredProject.projectType.should.be.equal(projectData.projectType)
-      registeredProject.certifications.should.be.equal(projectData.certifications)
-      registeredProject.created.should.be.equal(true)
+      registeredProject.projectName.should.be.equal(projectData.projectName);
+      registeredProject.projectType.should.be.equal(projectData.projectType);
+      registeredProject.certifications.should.be.equal(projectData.certifications);
+      registeredProject.created.should.be.equal(true);
     });
 
     it('should get the address of the rheaGeToken', async function () {
       const token = await this.registry.rheaGeToken();
-      token.should.be.equal(this.rheaGe.address)
+      token.should.be.equal(this.rheaGe.address);
     });
 
     it('should get totalSupplyRetired', async function () {
@@ -425,17 +425,17 @@ contract('RheaGeRegistry Test', ([
         rgtReceiver,
         { from: certifier1 }
       ).should.be.fulfilled;
-      
+
       const retiredAmountBefore = await this.registry.totalSupplyRetired();
       const retireAmount = new BigNumber(10);
       await this.registry.retire(retireAmount, { from: rgtReceiver }).should.be.fulfilled;
-      
+
       let totalRetiredAmount = await this.registry.totalSupplyRetired();
       totalRetiredAmount.should.be.bignumber.equal(retiredAmountBefore.add(retireAmount));
 
       await this.registry.retire(retireAmount, { from: rgtReceiver }).should.be.fulfilled;
-      totalRetiredAmount = await this.registry.totalSupplyRetired()
-      totalRetiredAmount.should.be.bignumber.equal(retiredAmountBefore.add(retireAmount).add(retireAmount))
+      totalRetiredAmount = await this.registry.totalSupplyRetired();
+      totalRetiredAmount.should.be.bignumber.equal(retiredAmountBefore.add(retireAmount).add(retireAmount));
     });
 
     it('should get retiredBalances', async function () {
