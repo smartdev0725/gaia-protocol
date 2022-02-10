@@ -46,10 +46,11 @@ contract('RheaGeToken Upgrade Tests', ([
     );
     this.rheaGe = await deployRheaGeToken(this.roleManager.address, governor);
     this.resolver = await Resolver.new(this.roleManager.address);
-    this.rheaGeUpgradedMock = await RheaGeUpgradedMock.new()
+    this.rheaGeUpgradedMock = await deployRheaGeUpgradedMock(this.roleManager.address, governor);
   });
 
   it.only('should upgrade rheaGeToken', async function () {
+    console.log(this.rheaGeUpgradedMock.address);
     const signature = configToKeccakSignature({
       contract: this.rheaGeUpgradedMock,
       name: 'mint',
