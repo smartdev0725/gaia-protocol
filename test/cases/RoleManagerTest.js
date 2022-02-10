@@ -62,7 +62,7 @@ contract('RoleManager', ([
     ).should.be.rejectedWith('revert');
   });
 
-  describe('#appointGovernors #addRoleForAddress(-es) #isGovernor', () => {
+  describe('#addRoleForAddress(-es)', () => {
     beforeEach(async function () {
       const confirmationsRequired = 1;
       this.roleManager = await RoleManager.new(

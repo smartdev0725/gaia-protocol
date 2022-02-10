@@ -28,12 +28,20 @@ contract('RheaGeRegistry Test', ([
   offsetter1,
   rgtReceiver,
 ]) => {
+  const projectId = new BigNumber('1748');
   const batchDataBase = {
-    serialNumber: '1234567',
-    projectId: new BigNumber(777),
-    vintage: 'vintage', // TODO: what should this look like ??
-    creditType: 'creditType', // TODO: what should this look like ??
+    serialNumber: '1234567-D81FA-3772',
+    projectId,
+    vintageEnd: '01-12-2019',
+    creditType: 'VCU',
     quantity: new BigNumber(10000),
+    certifications: '01: No Poverty; 02: Zero Hunger; 03: Good Health and Well-being;',
+  };
+
+  const projectDataBase = {
+    projectId,
+    name: 'Southern Cardamom REDD+ Project',
+    projectType: 'Agriculture Forestry and Other Land Use',
   };
   const zeroAddress = '0x0000000000000000000000000000000000000000';
 
@@ -87,19 +95,21 @@ contract('RheaGeRegistry Test', ([
       const {
         serialNumber: serialNumberSC,
         projectId: projectIdSC,
-        vintage: vintageSC,
+        vintageEnd: vintageEndSC,
         creditType: cresitTypeSC,
         quantity: quantitySC,
+        certificationsOrObjectives: certificationsOrObjectivesSC,
         initialRgtOwner: initialRgtOwnerSC,
         created,
       } = await this.registry.registeredBatches(newBatch.serialNumber);
 
       serialNumberSC.should.be.equal(newBatch.serialNumber);
       projectIdSC.should.be.bignumber.equal(newBatch.projectId);
-      vintageSC.should.be.equal(newBatch.vintage);
+      vintageEndSC.should.be.equal(newBatch.vintageEnd);
       cresitTypeSC.should.be.equal(newBatch.creditType);
       quantitySC.should.be.bignumber.equal(newBatch.quantity);
       initialRgtOwnerSC.should.be.equal(rgtReceiver);
+      certificationsOrObjectivesSC.should.be.equal(newBatch.certifications);
       created.should.be.equal(true);
 
       const receiverBalAfter = await this.rheaGe.balanceOf(rgtReceiver);
@@ -238,7 +248,6 @@ contract('RheaGeRegistry Test', ([
         projectId: new BigNumber(1),
         projectName: 'test',
         projectType: 'test',
-        certifications: 'test',
       };
       await this.registry.addProject(
         ...Object.values(projectData),
@@ -251,7 +260,6 @@ contract('RheaGeRegistry Test', ([
         projectId: new BigNumber(10),
         projectName: 'test',
         projectType: 'test',
-        certifications: 'test',
       };
       await this.registry.addProject(
         ...Object.values(projectData),
@@ -268,7 +276,6 @@ contract('RheaGeRegistry Test', ([
         projectId: new BigNumber(2),
         projectName: 'test',
         projectType: 'test',
-        certifications: 'test',
       };
       await this.registry.addProject(
         ...Object.values(projectData),
@@ -276,12 +283,7 @@ contract('RheaGeRegistry Test', ([
       ).should.be.rejectedWith('RoleAware: Permission denied to execute this function');
     });
 
-    it('should NOT setRheaGeToken with GOVERNOR_ROLE twice', async function () {
-      await this.registry.setRheaGeToken(
-        this.rheaGe.address,
-        { from: governor }
-      ).should.be.rejectedWith('RGRegistry::setRheaGeToken: address of RheaGeToken must be set only once');
-    });
+    // TODO: describe('Events', () => {}); test all events on Registry
 
     it('should NOT setRheaGeToken to zero address', async function () {
       await this.registry.setRheaGeToken(
@@ -318,14 +320,15 @@ contract('RheaGeRegistry Test', ([
         rgtReceiver,
         { from: certifier1 }
       ).should.be.fulfilled;
-      const bartchGeneratedEvent = (await this.registry.getPastEvents('BatchGenerated')).at(-1).args;
-      bartchGeneratedEvent.serialNumber.should.be.equal(newBatch.serialNumber);
-      bartchGeneratedEvent.projectId.should.be.bignumber.equal(newBatch.projectId);
-      bartchGeneratedEvent.vintage.should.be.equal(sha3(newBatch.vintage)); // indexed
-      bartchGeneratedEvent.creditType.should.be.equal(sha3(newBatch.creditType)); // indexed
-      bartchGeneratedEvent.quantity.should.be.bignumber.equal(newBatch.quantity);
-      bartchGeneratedEvent.initialRgtOwner.should.be.equal(rgtReceiver);
-      bartchGeneratedEvent.certifier.should.be.equal(certifier1);
+      const batchGeneratedEvent = (await this.registry.getPastEvents('BatchGenerated')).at(-1).args;
+      batchGeneratedEvent.serialNumber.should.be.equal(newBatch.serialNumber);
+      batchGeneratedEvent.projectId.should.be.bignumber.equal(newBatch.projectId);
+      batchGeneratedEvent.vintageEnd.should.be.equal(sha3(newBatch.vintageEnd)); // indexed
+      batchGeneratedEvent.creditType.should.be.equal(sha3(newBatch.creditType)); // indexed
+      batchGeneratedEvent.quantity.should.be.bignumber.equal(newBatch.quantity);
+      batchGeneratedEvent.certificationsOrObjectives.should.be.equal(newBatch.certifications);
+      batchGeneratedEvent.initialRgtOwner.should.be.equal(rgtReceiver);
+      batchGeneratedEvent.certifier.should.be.equal(certifier1);
 
       const transferEvent = (await this.rheaGe.getPastEvents('Transfer')).at(-1).args;
       transferEvent.from.should.be.equal(zeroAddress);
@@ -338,7 +341,6 @@ contract('RheaGeRegistry Test', ([
         projectId: new BigNumber(3),
         projectName: 'test project name',
         projectType: 'test project type',
-        certifications: 'test certifications',
       };
       await this.registry.addProject(
         ...Object.values(projectData),
@@ -348,7 +350,6 @@ contract('RheaGeRegistry Test', ([
       projectAddedEvent.projectId.should.be.bignumber.equal(projectData.projectId);
       projectAddedEvent.projectName.should.be.equal(projectData.projectName);
       projectAddedEvent.projectType.should.be.equal(sha3(projectData.projectType)); // indexed
-      projectAddedEvent.certifications.should.be.equal(projectData.certifications);
       projectAddedEvent.certifier.should.be.equal(certifier1);
     });
 
@@ -383,9 +384,10 @@ contract('RheaGeRegistry Test', ([
       const registeredBatch = await this.registry.getRegisteredBatch(newBatch.serialNumber);
       registeredBatch.serialNumber.should.be.equal(newBatch.serialNumber.toString());
       registeredBatch.projectId.should.be.equal(newBatch.projectId.toString());
-      registeredBatch.vintage.should.be.equal(newBatch.vintage);
+      registeredBatch.vintageEnd.should.be.equal(newBatch.vintageEnd);
       registeredBatch.creditType.should.be.equal(newBatch.creditType);
       registeredBatch.quantity.should.be.equal(newBatch.quantity.toString());
+      registeredBatch.certificationsOrObjectives.should.be.equal(newBatch.certifications);
       registeredBatch.initialRgtOwner.should.be.equal(rgtReceiver);
       registeredBatch.created.should.be.equal(true);
     });
@@ -395,7 +397,6 @@ contract('RheaGeRegistry Test', ([
         projectId: new BigNumber(5),
         projectName: 'test 5',
         projectType: 'test type 5',
-        certifications: 'test cert 5',
       };
       await this.registry.addProject(
         ...Object.values(projectData),
@@ -404,7 +405,6 @@ contract('RheaGeRegistry Test', ([
       const registeredProject = await this.registry.getRegisteredProject(projectData.projectId);
       registeredProject.projectName.should.be.equal(projectData.projectName);
       registeredProject.projectType.should.be.equal(projectData.projectType);
-      registeredProject.certifications.should.be.equal(projectData.certifications);
       registeredProject.created.should.be.equal(true);
     });
 
@@ -457,6 +457,23 @@ contract('RheaGeRegistry Test', ([
       const balance = await this.registry.retiredBalances(rgtReceiver);
       balance.should.be.bignumber.equal(balanceBefore.add(retireAmount));
     });
+  });
+
+  it('#addProject() should write project to storage', async function () {
+    await this.registry.addProject(
+      ...Object.values(projectDataBase),
+      { from: certifier1 }
+    ).should.be.fulfilled;
+
+    const {
+      projectName,
+      projectType,
+      created,
+    } = await this.registry.registeredProjects(projectDataBase.projectId);
+
+    projectName.should.be.equal(projectDataBase.name);
+    projectType.should.be.equal(projectDataBase.projectType);
+    created.should.be.equal(true);
   });
 
   it('should NOT initialize twice', async function () {
