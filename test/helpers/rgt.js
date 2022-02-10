@@ -26,26 +26,15 @@ export const deployRheaGeToken = async (
     { from: governor }
   );
 
-  return contractInstanceAt(IRheaGeToken, rgtRouter.address);
+  return {
+    token: await contractInstanceAt(IRheaGeToken, rgtRouter.address),
+    resolver: rgtResolver,
+  };
 };
 
 export const deployRheaGeUpgradedMock = async (
-  roleManager,
-  governor
-) => {
-  const rgtImpl = await RheaGeUpgradedMock.new();
-  const rgtResolver = await setupResolver(
-    [ rgtImpl ],
-    roleManager,
-    governor
-  );
+) => RheaGeUpgradedMock.new();
 
-  await RheaGeTokenRouter.new(
-    roleManager,
-    rgtResolver.address,
-    { from: governor }
-  );
-
-  return rgtImpl
-};
-
+export const upgradedMockInterface = async (
+  rgtAddress,
+) => contractInstanceAt(IRheaGeUpgradedMock, rgtAddress);

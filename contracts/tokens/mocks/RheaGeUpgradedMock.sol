@@ -18,17 +18,12 @@ contract RheaGeUpgradedMock is RoleAware, ERC20Upgradeable, OnlyRouterAccess, IR
         setRoleManager(_roleManager);
     }
 
-    function mint(address to, uint256 amount) public override onlyRole(MOCK_ROLE) {
+    function mint(address to, uint256 amount) public override onlyRole(MINTER_ROLE) {
         _mint(to, amount);
         emit RheaGeTokensMinted(to, amount);
     }
 
-    function burn(address account, uint256 amount) public override onlyRole(MOCK_ROLE) {
-        _burn(account, amount);
-        emit RheaGeTokensBurned(account, amount);
-    }
-
-    function setVersion(uint256 _version) external override onlyRole(GOVERNOR_ROLE) {
+    function setVersion(uint256 _version) public override onlyRole(MOCK_ROLE) {
         version = _version;
     }
 }

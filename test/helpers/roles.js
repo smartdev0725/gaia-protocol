@@ -11,6 +11,7 @@ const rolesMap = {
   MINTER_ROLE: 'MINTER_ROLE',
   CERTIFIER_ROLE: 'CERTIFIER_ROLE',
   BURNER_ROLE: 'BURNER_ROLE',
+  MOCK_ROLE: 'MOCK_ROLE',
 };
 
 export const getRoleBytes32 = (roleName) => {

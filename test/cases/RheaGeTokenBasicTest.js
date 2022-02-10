@@ -45,7 +45,7 @@ contract('RheaGeToken Basic Tests', ([
       [ MINTER_ROLE, BURNER_ROLE ],
       { from: governor }
     );
-    this.rheaGe = await deployRheaGeToken(this.roleManager.address, governor);
+    this.rheaGe = (await deployRheaGeToken(this.roleManager.address, governor)).token;
   });
 
   it('should NOT initialize twice', async function () {

@@ -12,18 +12,11 @@ interface IRheaGeUpgradedMock is IERC20Upgradeable, IERC20MetadataUpgradeable {
         uint256 amount
     );
 
-    event RheaGeTokensBurned(
-        address indexed from,
-        uint256 amount
-    );
-
     function init(
         address _roleManager
     ) external;
 
     function mint(address to, uint256 amount) external;
-
-    function burn(address account, uint256 amount) external;
 
     function setVersion(uint256 _version) external;
 
