@@ -286,7 +286,7 @@ contract('RheaGeRegistry Test', ([
       ).should.be.rejectedWith('RoleAware: Permission denied to execute this function');
     });
 
-  // TODO: describe('Events', () => {}); test all events on Registry
+    // TODO: describe('Events', () => {}); test all events on Registry
 
     it('should NOT setRheaGeToken to zero address', async function () {
       await this.registry.setRheaGeToken(
@@ -467,7 +467,7 @@ contract('RheaGeRegistry Test', ([
   it('#addProject() should write project to storage', async function () {
     await this.registry.addProject(
       ...Object.values(projectDataBase),
-      { from: certifier }
+      { from: certifier1 }
     ).should.be.fulfilled;
 
     const {
