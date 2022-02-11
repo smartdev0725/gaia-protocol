@@ -47,7 +47,7 @@ contract('RheaGeRegistry Test', ([
 
   before(async function () {
     this.roleManager = await RoleManager.new([ governor ], '1');
-    this.rheaGe = await deployRheaGeToken(this.roleManager.address, governor);
+    this.rheaGe = (await deployRheaGeToken(this.roleManager.address, governor)).token;
 
     this.registry = await deployRegistry(
       this.rheaGe.address,

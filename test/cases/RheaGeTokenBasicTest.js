@@ -31,6 +31,7 @@ contract('RheaGeToken Basic Tests', ([
   minter,
   burner,
   moneybag, // send any amount to this account
+  receiver,
   clientWithoutTokens, // do not send tokens to this account
   client1,
   client2,
@@ -45,7 +46,7 @@ contract('RheaGeToken Basic Tests', ([
       [ MINTER_ROLE, BURNER_ROLE ],
       { from: governor }
     );
-    this.rheaGe = await deployRheaGeToken(this.roleManager.address, governor);
+    this.rheaGe = (await deployRheaGeToken(this.roleManager.address, governor)).token;
   });
 
   it('should NOT initialize twice', async function () {
@@ -118,6 +119,12 @@ contract('RheaGeToken Basic Tests', ([
     const amount = new BigNumber(10);
     await this.rheaGe.transfer(zeroAddress, amount, { from: moneybag })
       .should.be.rejectedWith('ERC20: transfer to the zero address');
+  });
+
+  it('should transfer a few tokens', async function () {
+    const amount = new BigNumber(50);
+    await this.rheaGe.transfer(receiver, amount, { from: moneybag })
+      .should.be.fulfilled;
   });
 
   it('should transfer zero amount', async function () {

@@ -6,6 +6,9 @@ const RheaGeTokenRouter = artifacts.require('./RheaGeTokenRouter.sol');
 const RheaGeToken = artifacts.require('./RheaGeToken.sol');
 const IRheaGeToken = artifacts.require('./IRheaGeToken.sol');
 
+const RheaGeUpgradedMock = artifacts.require('./RheaGeUpgradedMock.sol');
+const IRheaGeUpgradedMock = artifacts.require('./IRheaGeUpgradedMock.sol');
+
 export const deployRheaGeToken = async (
   roleManager,
   governor
@@ -23,5 +26,15 @@ export const deployRheaGeToken = async (
     { from: governor }
   );
 
-  return contractInstanceAt(IRheaGeToken, rgtRouter.address);
+  return {
+    token: await contractInstanceAt(IRheaGeToken, rgtRouter.address),
+    resolver: rgtResolver,
+  };
 };
+
+export const deployRheaGeUpgradedMock = async (
+) => RheaGeUpgradedMock.new();
+
+export const upgradedMockInterface = async (
+  rgtAddress,
+) => contractInstanceAt(IRheaGeUpgradedMock, rgtAddress);
