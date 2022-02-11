@@ -61,10 +61,14 @@ contract('RheaGeRegistry Test', ([
         certifier2,
         this.registry.address,
         this.registry.address,
+        certifier1,
+        certifier1,
       ],
       [
         CERTIFIER_ROLE,
         CERTIFIER_ROLE,
+        MINTER_ROLE,
+        BURNER_ROLE,
         MINTER_ROLE,
         BURNER_ROLE,
       ],
@@ -456,6 +460,62 @@ contract('RheaGeRegistry Test', ([
       await this.registry.retire(retireAmount, { from: rgtReceiver }).should.be.fulfilled;
       const balance = await this.registry.retiredBalances(rgtReceiver);
       balance.should.be.bignumber.equal(balanceBefore.add(retireAmount));
+    });
+  });
+
+  describe('Edge cases', () => {
+    it('if batch was generated with incorrect quantity should be able to update and manually mint', async function () {
+      const correctQuantity = new BigNumber(150000);
+      const incorrectQuantity = new BigNumber(15143);
+      const quantityDiff = correctQuantity.sub(incorrectQuantity);
+
+      const incorrectBatch = {
+        ...batchDataBase,
+        quantity: incorrectQuantity,
+        serialNumber: '13155-VCS',
+      };
+
+      const correctBatch = {
+        ...incorrectBatch,
+        quantity: correctQuantity,
+      };
+
+      const receiverBalBefore = await this.rheaGe.balanceOf(rgtReceiver);
+
+      await this.registry.generateBatch(
+        ...Object.values(incorrectBatch),
+        rgtReceiver,
+        { from: certifier1 }
+      );
+
+      const receiverBalAfterIncorrect = await this.rheaGe.balanceOf(rgtReceiver);
+
+      receiverBalAfterIncorrect.sub(receiverBalBefore).should.be.bignumber.equal(incorrectQuantity);
+
+      const incorrectBatchFromSC = await this.registry.registeredBatches(incorrectBatch.serialNumber);
+      incorrectBatchFromSC.quantity.should.be.bignumber.equal(incorrectBatch.quantity);
+
+      await this.registry.updateBatch(
+        ...Object.values(correctBatch),
+        rgtReceiver,
+        { from: certifier1 }
+      );
+
+      await this.rheaGe.mint(rgtReceiver, quantityDiff, { from: certifier1 });
+
+      const receiverBalFinal = await this.rheaGe.balanceOf(rgtReceiver);
+
+      const finalBatchFromSC = await this.registry.registeredBatches(incorrectBatch.serialNumber);
+
+      receiverBalFinal.sub(receiverBalBefore).should.be.bignumber.equal(correctQuantity);
+
+      finalBatchFromSC.quantity.should.be.bignumber.equal(correctBatch.quantity);
+      finalBatchFromSC.serialNumber.should.be.equal(incorrectBatchFromSC.serialNumber);
+      finalBatchFromSC.projectId.should.be.bignumber.equal(incorrectBatchFromSC.projectId);
+      finalBatchFromSC.vintageEnd.should.be.equal(incorrectBatchFromSC.vintageEnd);
+      finalBatchFromSC.creditType.should.be.equal(incorrectBatchFromSC.creditType);
+      finalBatchFromSC.certificationsOrObjectives.should.be.equal(incorrectBatchFromSC.certificationsOrObjectives);
+      finalBatchFromSC.initialRgtOwner.should.be.equal(incorrectBatchFromSC.initialRgtOwner);
     });
   });
 
