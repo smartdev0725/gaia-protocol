@@ -557,6 +557,9 @@ contract('RheaGeRegistry Test', ([
     });
   });
 
+  // TODO: updateBatch() - should NOT update if batch has not been generated before
+  // TODO: test all revert (require) cases that have not been tested
+
   describe('#addProject() / #updateProject()', () => {
     // TODO: should NOT add project if already added
     // TODO: should NOT update if not added
