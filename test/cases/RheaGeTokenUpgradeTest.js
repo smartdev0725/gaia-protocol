@@ -32,7 +32,7 @@ export const tokenName = 'RheaGe Token';
 export const tokenSymbol = 'RGT';
 
 
-contract.only('RheaGeToken Upgrade Tests', ([
+contract('RheaGeToken Upgrade Tests', ([
   governor,
   minter,
   burner,
