@@ -579,6 +579,7 @@ contract('RheaGeRegistry Test', ([
     it('#updateProject() should update existing project in storage', async function () {
       const incorrectProject = {
         ...projectDataBase,
+        projectId: new BigNumber(111),
         projectType: 'Automotive',
       };
 
@@ -596,7 +597,7 @@ contract('RheaGeRegistry Test', ([
         projectName: projectNameInc,
         projectType: projectTypeInc,
         created: createdInc,
-      } = await this.registry.registeredProjects(projectDataBase.projectId);
+      } = await this.registry.registeredProjects(incorrectProject.projectId);
 
       projectNameInc.should.be.equal(incorrectProject.name);
       projectTypeInc.should.be.equal(incorrectProject.projectType);
@@ -611,7 +612,7 @@ contract('RheaGeRegistry Test', ([
         projectName: projectNameCorr,
         projectType: projectTypeCorr,
         created: createdCorr,
-      } = await this.registry.registeredProjects(projectDataBase.projectId);
+      } = await this.registry.registeredProjects(correctProject.projectId);
 
       projectNameCorr.should.be.equal(incorrectProject.name);
       projectTypeCorr.should.be.equal(correctProject.projectType);
