@@ -139,6 +139,43 @@ contract('RheaGeRegistry Test', ([
         { from: certifier1 }
       ).should.be.rejectedWith('RGRegistry::generateBatch: Batch already created');
     });
+
+    it('should only update storage and NOT mint tokens if mintTo address is passed as zero', async function () {
+      const newBatch = {
+        ...batchDataBase,
+        serialNumber: '131553-ABDS-135',
+      };
+      const receiverBalBefore = await this.rheaGe.balanceOf(rgtReceiver);
+
+      await this.registry.generateBatch(
+        ...Object.values(newBatch),
+        zeroAddress,
+        { from: certifier1 }
+      ).should.be.fulfilled;
+
+      const {
+        serialNumber: serialNumberSC,
+        projectId: projectIdSC,
+        vintageEnd: vintageEndSC,
+        creditType: cresitTypeSC,
+        quantity: quantitySC,
+        certificationsOrObjectives: certificationsOrObjectivesSC,
+        initialRgtOwner: initialRgtOwnerSC,
+        created,
+      } = await this.registry.registeredBatches(newBatch.serialNumber);
+
+      serialNumberSC.should.be.equal(newBatch.serialNumber);
+      projectIdSC.should.be.bignumber.equal(newBatch.projectId);
+      vintageEndSC.should.be.equal(newBatch.vintageEnd);
+      cresitTypeSC.should.be.equal(newBatch.creditType);
+      quantitySC.should.be.bignumber.equal(newBatch.quantity);
+      initialRgtOwnerSC.should.be.equal(zeroAddress);
+      certificationsOrObjectivesSC.should.be.equal(newBatch.certifications);
+      created.should.be.equal(true);
+
+      const receiverBalAfter = await this.rheaGe.balanceOf(rgtReceiver);
+      receiverBalAfter.sub(receiverBalBefore).should.be.bignumber.equal(new BigNumber(0));
+    });
   });
 
   describe('#retire()', async () => {
@@ -519,21 +556,67 @@ contract('RheaGeRegistry Test', ([
     });
   });
 
-  it('#addProject() should write project to storage', async function () {
-    await this.registry.addProject(
-      ...Object.values(projectDataBase),
-      { from: certifier1 }
-    ).should.be.fulfilled;
+  describe('#addProject() / #updateProject()', () => {
+    // TODO: should NOT add project if already added
+    // TODO: should NOT update if not added
+    it('#addProject() should write project to storage', async function () {
+      await this.registry.addProject(
+        ...Object.values(projectDataBase),
+        { from: certifier1 }
+      ).should.be.fulfilled;
 
-    const {
-      projectName,
-      projectType,
-      created,
-    } = await this.registry.registeredProjects(projectDataBase.projectId);
+      const {
+        projectName,
+        projectType,
+        created,
+      } = await this.registry.registeredProjects(projectDataBase.projectId);
 
-    projectName.should.be.equal(projectDataBase.name);
-    projectType.should.be.equal(projectDataBase.projectType);
-    created.should.be.equal(true);
+      projectName.should.be.equal(projectDataBase.name);
+      projectType.should.be.equal(projectDataBase.projectType);
+      created.should.be.equal(true);
+    });
+
+    it('#updateProject() should update existing project in storage', async function () {
+      const incorrectProject = {
+        ...projectDataBase,
+        projectType: 'Automotive',
+      };
+
+      const correctProject = {
+        ...incorrectProject,
+        projectType: 'Forestry',
+      };
+
+      await this.registry.addProject(
+        ...Object.values(incorrectProject),
+        { from: certifier1 }
+      ).should.be.fulfilled;
+
+      const {
+        projectName: projectNameInc,
+        projectType: projectTypeInc,
+        created: createdInc,
+      } = await this.registry.registeredProjects(projectDataBase.projectId);
+
+      projectNameInc.should.be.equal(incorrectProject.name);
+      projectTypeInc.should.be.equal(incorrectProject.projectType);
+      createdInc.should.be.equal(true);
+
+      await this.registry.updateProject(
+        ...Object.values(correctProject),
+        { from: certifier1 }
+      ).should.be.fulfilled;
+
+      const {
+        projectName: projectNameCorr,
+        projectType: projectTypeCorr,
+        created: createdCorr,
+      } = await this.registry.registeredProjects(projectDataBase.projectId);
+
+      projectNameCorr.should.be.equal(incorrectProject.name);
+      projectTypeCorr.should.be.equal(correctProject.projectType);
+      createdCorr.should.be.equal(true);
+    });
   });
 
   it('should NOT initialize twice', async function () {
