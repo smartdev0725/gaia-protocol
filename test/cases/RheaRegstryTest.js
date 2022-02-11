@@ -501,6 +501,7 @@ contract('RheaGeRegistry Test', ([
   });
 
   describe('Edge cases', () => {
+    // TODO: find other possible edge cases with all existing flows
     it('if batch was generated with incorrect quantity should be able to update and manually mint', async function () {
       const correctQuantity = new BigNumber(150000);
       const incorrectQuantity = new BigNumber(15143);
