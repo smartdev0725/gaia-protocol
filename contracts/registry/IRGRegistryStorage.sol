@@ -16,7 +16,25 @@ interface IRGRegistryStorage is Structs {
         address indexed certifier
     );
 
+    event BatchUpdated(
+        string serialNumber,
+        uint256 projectId,
+        string indexed vintageEnd,
+        string indexed creditType,
+        uint256 quantity,
+        string certificationsOrObjectives,
+        address initialRgtOwner,
+        address indexed certifier
+    );
+
     event ProjectAdded(
+        uint256 projectId,
+        string projectName,
+        string indexed projectType,
+        address indexed certifier
+    );
+
+    event ProjectUpdated(
         uint256 projectId,
         string projectName,
         string indexed projectType,
