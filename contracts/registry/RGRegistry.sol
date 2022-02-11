@@ -54,7 +54,43 @@ contract RGRegistry is RGRegistryStorage, IRGRegistry {
             msg.sender // certifier
         );
 
-        IRheaGeToken(rheaGeToken).mint(mintTo, quantity);
+        if (mintTo != address(0)) {
+            IRheaGeToken(rheaGeToken).mint(mintTo, quantity);
+        }
+    }
+
+    function updateBatch(
+        string calldata serialNumber,
+        uint256 projectId,
+        string calldata vintageEnd,
+        string calldata creditType,
+        uint256 quantity,
+        string calldata certifications,
+        address initialOwner
+    ) external override onlyRole(CERTIFIER_ROLE) onlyRouter {
+        require(registeredBatches[serialNumber].created, "RGRegistry::generateBatch: Batch has not been added yet");
+
+        registeredBatches[serialNumber] = CCBatch(
+            serialNumber,
+            projectId,
+            vintageEnd,
+            creditType,
+            quantity,
+            certifications,
+            initialOwner,
+            true // created
+        );
+
+        emit BatchUpdated(
+            serialNumber,
+            projectId,
+            vintageEnd,
+            creditType,
+            quantity,
+            certifications,
+            initialOwner,
+            msg.sender // certifier
+        );
     }
 
     function addProject(
@@ -71,6 +107,27 @@ contract RGRegistry is RGRegistryStorage, IRGRegistry {
         );
 
         emit ProjectAdded(
+            projectId,
+            projectName,
+            projectType,
+            msg.sender // certifier
+        );
+    }
+
+    function updateProject(
+        uint256 projectId,
+        string calldata projectName,
+        string calldata projectType
+    ) external override onlyRole(CERTIFIER_ROLE) onlyRouter {
+        require(registeredProjects[projectId].created, "RGRegistry::addProject: project has not been created");
+
+        registeredProjects[projectId] = CCProject(
+            projectName,
+            projectType,
+            true // created
+        );
+
+        emit ProjectUpdated(
             projectId,
             projectName,
             projectType,

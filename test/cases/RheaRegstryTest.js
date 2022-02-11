@@ -61,10 +61,14 @@ contract('RheaGeRegistry Test', ([
         certifier2,
         this.registry.address,
         this.registry.address,
+        certifier1,
+        certifier1,
       ],
       [
         CERTIFIER_ROLE,
         CERTIFIER_ROLE,
+        MINTER_ROLE,
+        BURNER_ROLE,
         MINTER_ROLE,
         BURNER_ROLE,
       ],
@@ -134,6 +138,43 @@ contract('RheaGeRegistry Test', ([
         rgtReceiver,
         { from: certifier1 }
       ).should.be.rejectedWith('RGRegistry::generateBatch: Batch already created');
+    });
+
+    it('should only update storage and NOT mint tokens if mintTo address is passed as zero', async function () {
+      const newBatch = {
+        ...batchDataBase,
+        serialNumber: '131553-ABDS-135',
+      };
+      const receiverBalBefore = await this.rheaGe.balanceOf(rgtReceiver);
+
+      await this.registry.generateBatch(
+        ...Object.values(newBatch),
+        zeroAddress,
+        { from: certifier1 }
+      ).should.be.fulfilled;
+
+      const {
+        serialNumber: serialNumberSC,
+        projectId: projectIdSC,
+        vintageEnd: vintageEndSC,
+        creditType: cresitTypeSC,
+        quantity: quantitySC,
+        certificationsOrObjectives: certificationsOrObjectivesSC,
+        initialRgtOwner: initialRgtOwnerSC,
+        created,
+      } = await this.registry.registeredBatches(newBatch.serialNumber);
+
+      serialNumberSC.should.be.equal(newBatch.serialNumber);
+      projectIdSC.should.be.bignumber.equal(newBatch.projectId);
+      vintageEndSC.should.be.equal(newBatch.vintageEnd);
+      cresitTypeSC.should.be.equal(newBatch.creditType);
+      quantitySC.should.be.bignumber.equal(newBatch.quantity);
+      initialRgtOwnerSC.should.be.equal(zeroAddress);
+      certificationsOrObjectivesSC.should.be.equal(newBatch.certifications);
+      created.should.be.equal(true);
+
+      const receiverBalAfter = await this.rheaGe.balanceOf(rgtReceiver);
+      receiverBalAfter.sub(receiverBalBefore).should.be.bignumber.equal(new BigNumber(0));
     });
   });
 
@@ -459,21 +500,128 @@ contract('RheaGeRegistry Test', ([
     });
   });
 
-  it('#addProject() should write project to storage', async function () {
-    await this.registry.addProject(
-      ...Object.values(projectDataBase),
-      { from: certifier1 }
-    ).should.be.fulfilled;
+  describe('Edge cases', () => {
+    // TODO: find other possible edge cases with all existing flows
+    it('if batch was generated with incorrect quantity should be able to update and manually mint', async function () {
+      const correctQuantity = new BigNumber(150000);
+      const incorrectQuantity = new BigNumber(15143);
+      const quantityDiff = correctQuantity.sub(incorrectQuantity);
 
-    const {
-      projectName,
-      projectType,
-      created,
-    } = await this.registry.registeredProjects(projectDataBase.projectId);
+      const incorrectBatch = {
+        ...batchDataBase,
+        quantity: incorrectQuantity,
+        serialNumber: '13155-VCS',
+      };
 
-    projectName.should.be.equal(projectDataBase.name);
-    projectType.should.be.equal(projectDataBase.projectType);
-    created.should.be.equal(true);
+      const correctBatch = {
+        ...incorrectBatch,
+        quantity: correctQuantity,
+      };
+
+      const receiverBalBefore = await this.rheaGe.balanceOf(rgtReceiver);
+
+      await this.registry.generateBatch(
+        ...Object.values(incorrectBatch),
+        rgtReceiver,
+        { from: certifier1 }
+      );
+
+      const receiverBalAfterIncorrect = await this.rheaGe.balanceOf(rgtReceiver);
+
+      receiverBalAfterIncorrect.sub(receiverBalBefore).should.be.bignumber.equal(incorrectQuantity);
+
+      const incorrectBatchFromSC = await this.registry.registeredBatches(incorrectBatch.serialNumber);
+      incorrectBatchFromSC.quantity.should.be.bignumber.equal(incorrectBatch.quantity);
+
+      await this.registry.updateBatch(
+        ...Object.values(correctBatch),
+        rgtReceiver,
+        { from: certifier1 }
+      );
+
+      await this.rheaGe.mint(rgtReceiver, quantityDiff, { from: certifier1 });
+
+      const receiverBalFinal = await this.rheaGe.balanceOf(rgtReceiver);
+
+      const finalBatchFromSC = await this.registry.registeredBatches(incorrectBatch.serialNumber);
+
+      receiverBalFinal.sub(receiverBalBefore).should.be.bignumber.equal(correctQuantity);
+
+      finalBatchFromSC.quantity.should.be.bignumber.equal(correctBatch.quantity);
+      finalBatchFromSC.serialNumber.should.be.equal(incorrectBatchFromSC.serialNumber);
+      finalBatchFromSC.projectId.should.be.bignumber.equal(incorrectBatchFromSC.projectId);
+      finalBatchFromSC.vintageEnd.should.be.equal(incorrectBatchFromSC.vintageEnd);
+      finalBatchFromSC.creditType.should.be.equal(incorrectBatchFromSC.creditType);
+      finalBatchFromSC.certificationsOrObjectives.should.be.equal(incorrectBatchFromSC.certificationsOrObjectives);
+      finalBatchFromSC.initialRgtOwner.should.be.equal(incorrectBatchFromSC.initialRgtOwner);
+    });
+  });
+
+  // TODO: updateBatch() - should NOT update if batch has not been generated before
+  // TODO: test all revert (require) cases that have not been tested
+
+  describe('#addProject() / #updateProject()', () => {
+    // TODO: should NOT add project if already added
+    // TODO: should NOT update if not added
+    it('#addProject() should write project to storage', async function () {
+      await this.registry.addProject(
+        ...Object.values(projectDataBase),
+        { from: certifier1 }
+      ).should.be.fulfilled;
+
+      const {
+        projectName,
+        projectType,
+        created,
+      } = await this.registry.registeredProjects(projectDataBase.projectId);
+
+      projectName.should.be.equal(projectDataBase.name);
+      projectType.should.be.equal(projectDataBase.projectType);
+      created.should.be.equal(true);
+    });
+
+    it('#updateProject() should update existing project in storage', async function () {
+      const incorrectProject = {
+        ...projectDataBase,
+        projectId: new BigNumber(111),
+        projectType: 'Automotive',
+      };
+
+      const correctProject = {
+        ...incorrectProject,
+        projectType: 'Forestry',
+      };
+
+      await this.registry.addProject(
+        ...Object.values(incorrectProject),
+        { from: certifier1 }
+      ).should.be.fulfilled;
+
+      const {
+        projectName: projectNameInc,
+        projectType: projectTypeInc,
+        created: createdInc,
+      } = await this.registry.registeredProjects(incorrectProject.projectId);
+
+      projectNameInc.should.be.equal(incorrectProject.name);
+      projectTypeInc.should.be.equal(incorrectProject.projectType);
+      createdInc.should.be.equal(true);
+
+      await this.registry.updateProject(
+        ...Object.values(correctProject),
+        { from: certifier1 }
+      ).should.be.fulfilled;
+
+      const {
+        projectName: projectNameCorr,
+        projectType: projectTypeCorr,
+        created: createdCorr,
+      } = await this.registry.registeredProjects(correctProject.projectId);
+
+      projectNameCorr.should.be.equal(incorrectProject.name);
+      projectTypeCorr.should.be.equal(correctProject.projectType);
+      createdCorr.should.be.equal(true);
+    });
   });
 
   it('should NOT initialize twice', async function () {

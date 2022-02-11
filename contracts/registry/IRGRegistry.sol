@@ -21,9 +21,25 @@ interface IRGRegistry is Structs {
         address mintTo
     ) external;
 
+    function updateBatch(
+        string calldata serialNumber,
+        uint256 projectId,
+        string calldata vintageEnd,
+        string calldata creditType,
+        uint256 quantity,
+        string calldata certifications,
+        address initialOwner
+    ) external;
+
     function addProject(
         uint256 projectId,
         string calldata name,
+        string calldata projectType
+    ) external;
+
+    function updateProject(
+        uint256 projectId,
+        string calldata projectName,
         string calldata projectType
     ) external;
 
