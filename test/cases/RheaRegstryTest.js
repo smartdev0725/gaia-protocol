@@ -4,7 +4,7 @@ import {
   sha3,
 } from '@nomisma/nomisma-smart-contract-helpers';
 import { deployRegistry } from '../helpers/registry';
-import { deployRheaGeToken } from '../helpers/rgt';
+import { deployRheaGeToken, intToTokenDecimals } from '../helpers/rgt';
 import { roleNames } from '../helpers/roles';
 
 require('chai')
@@ -34,7 +34,7 @@ contract('RheaGeRegistry Test', ([
     projectId,
     vintageEnd: '01-12-2019',
     creditType: 'VCU',
-    quantity: new BigNumber(10000),
+    quantity: intToTokenDecimals(10000),
     certifications: '01: No Poverty; 02: Zero Hunger; 03: Good Health and Well-being;',
   };
 
@@ -176,6 +176,45 @@ contract('RheaGeRegistry Test', ([
       const receiverBalAfter = await this.rheaGe.balanceOf(rgtReceiver);
       receiverBalAfter.sub(receiverBalBefore).should.be.bignumber.equal(new BigNumber(0));
     });
+
+    it('should revert generateBatch when quantity is a fraction', async function () {
+      const newBatch = {
+        ...batchDataBase,
+        quantity: new BigNumber('1000000000000000001'),
+        serialNumber: '131653135',
+      };
+
+      await this.registry.generateBatch(
+        ...Object.values(newBatch),
+        rgtReceiver,
+        { from: certifier1 }
+      ).should.be.rejectedWith('RGRegistry::generateBatch: quantity is a fraction');
+    });
+
+    it('should revert updateBatch when quantity is a fraction', async function () {
+      const incorrectBatch = {
+        ...batchDataBase,
+        serialNumber: '131753135',
+      };
+
+      const correctBatch = {
+        ...incorrectBatch,
+        quantity: new BigNumber('1000000000000000001'),
+        serialNumber: '131753135',
+      };
+
+      await this.registry.generateBatch(
+        ...Object.values(incorrectBatch),
+        rgtReceiver,
+        { from: certifier1 }
+      );
+
+      await this.registry.updateBatch(
+        ...Object.values(correctBatch),
+        rgtReceiver,
+        { from: certifier1 }
+      ).should.be.rejectedWith('RGRegistry::updateBatch: quantity is a fraction');
+    });
   });
 
   describe('#retire()', async () => {
@@ -185,9 +224,9 @@ contract('RheaGeRegistry Test', ([
         ...batchDataBase,
         serialNumber: '3331233',
       };
-      const tokenAmtBought = new BigNumber(350);
-      const tokenAmtRetire1 = new BigNumber(7);
-      const tokenAmtRetire2 = new BigNumber(179);
+      const tokenAmtBought = intToTokenDecimals(350);
+      const tokenAmtRetire1 = intToTokenDecimals(7);
+      const tokenAmtRetire2 = intToTokenDecimals(179);
 
       await this.registry.generateBatch(
         ...Object.values(newBatch),
@@ -223,7 +262,7 @@ contract('RheaGeRegistry Test', ([
         ...batchDataBase,
         serialNumber: '91234',
         projectId: new BigNumber(12341),
-        quantity: new BigNumber(100),
+        quantity: intToTokenDecimals(100),
       };
       await this.registry.generateBatch(
         ...Object.values(newBatch),
@@ -231,7 +270,7 @@ contract('RheaGeRegistry Test', ([
         { from: certifier1 }
       ).should.be.fulfilled;
 
-      const retireAmount = new BigNumber(2);
+      const retireAmount = intToTokenDecimals(2);
       let balanceBefore = await this.registry.retiredBalances(rgtReceiver);
 
       await this.registry.retire(retireAmount, { from: rgtReceiver }).should.be.fulfilled;
@@ -247,6 +286,20 @@ contract('RheaGeRegistry Test', ([
       await this.registry.retire(retireAmount, { from: rgtReceiver }).should.be.fulfilled;
       balance = await this.registry.retiredBalances(rgtReceiver);
       balance.should.be.bignumber.equal(balanceBefore.add(retireAmount));
+    });
+
+    it('should revert if retiring a fraction amount', async function () {
+      const retireAmount1 = new BigNumber('1000000000000000001');
+      await this.registry.retire(
+        retireAmount1,
+        { from: rgtReceiver }
+      ).should.be.rejectedWith('RGRegistry::retire: token amount is a fraction');
+
+      const retireAmount2 = new BigNumber('999999999999999999');
+      await this.registry.retire(
+        retireAmount2,
+        { from: rgtReceiver }
+      ).should.be.rejectedWith('RGRegistry::retire: token amount is a fraction');
     });
   });
 
@@ -284,41 +337,25 @@ contract('RheaGeRegistry Test', ([
       ).should.be.rejectedWith('RoleAware: Permission denied to execute this function');
     });
 
-    it('should addProject with CERTIFIER_ROLE', async function () {
+    it('should setProjectData with CERTIFIER_ROLE', async function () {
       const projectData = {
         projectId: new BigNumber(1),
         projectName: 'test',
         projectType: 'test',
       };
-      await this.registry.addProject(
+      await this.registry.setProjectData(
         ...Object.values(projectData),
         { from: certifier1 }
       ).should.be.fulfilled;
     });
 
-    it('should NOT addProject with the same id', async function () {
-      const projectData = {
-        projectId: new BigNumber(10),
-        projectName: 'test',
-        projectType: 'test',
-      };
-      await this.registry.addProject(
-        ...Object.values(projectData),
-        { from: certifier1 }
-      ).should.be.fulfilled;
-      await this.registry.addProject(
-        ...Object.values(projectData),
-        { from: certifier1 }
-      ).should.be.rejectedWith('RGRegistry::addProject: project has already been created');
-    });
-
-    it('should NOT addProject without CERTIFIER_ROLE', async function () {
+    it('should NOT setProjectData without CERTIFIER_ROLE', async function () {
       const projectData = {
         projectId: new BigNumber(2),
         projectName: 'test',
         projectType: 'test',
       };
-      await this.registry.addProject(
+      await this.registry.setProjectData(
         ...Object.values(projectData),
         { from: governor }
       ).should.be.rejectedWith('RoleAware: Permission denied to execute this function');
@@ -354,7 +391,7 @@ contract('RheaGeRegistry Test', ([
       const newBatch = {
         ...batchDataBase,
         serialNumber: '3',
-        quantity: new BigNumber(1000123),
+        quantity: intToTokenDecimals(1000123),
       };
       await this.registry.generateBatch(
         ...Object.values(newBatch),
@@ -377,25 +414,25 @@ contract('RheaGeRegistry Test', ([
       transferEvent.value.should.be.bignumber.equal(newBatch.quantity);
     });
 
-    it('should find and match ProjectAdded event', async function () {
+    it('should find and match ProjectDataSet event', async function () {
       const projectData = {
         projectId: new BigNumber(3),
         projectName: 'test project name',
         projectType: 'test project type',
       };
-      await this.registry.addProject(
+      await this.registry.setProjectData(
         ...Object.values(projectData),
         { from: certifier1 }
       ).should.be.fulfilled;
-      const projectAddedEvent = (await this.registry.getPastEvents('ProjectAdded')).at(-1).args;
-      projectAddedEvent.projectId.should.be.bignumber.equal(projectData.projectId);
-      projectAddedEvent.projectName.should.be.equal(projectData.projectName);
-      projectAddedEvent.projectType.should.be.equal(sha3(projectData.projectType)); // indexed
-      projectAddedEvent.certifier.should.be.equal(certifier1);
+      const projectDataSetEvent = (await this.registry.getPastEvents('ProjectDataSet')).at(-1).args;
+      projectDataSetEvent.projectId.should.be.bignumber.equal(projectData.projectId);
+      projectDataSetEvent.projectName.should.be.equal(projectData.projectName);
+      projectDataSetEvent.projectType.should.be.equal(sha3(projectData.projectType)); // indexed
+      projectDataSetEvent.certifier.should.be.equal(certifier1);
     });
 
     it('should find Transer (burn) and Retired events', async function () {
-      const tokenAmount = new BigNumber(123);
+      const tokenAmount = intToTokenDecimals(123);
       await this.registry.retire(tokenAmount, { from: rgtReceiver }).should.be.fulfilled;
 
       const transferEvent = (await this.rheaGe.getPastEvents('Transfer')).at(-1).args;
@@ -415,7 +452,7 @@ contract('RheaGeRegistry Test', ([
         ...batchDataBase,
         serialNumber: '555',
         projectId: new BigNumber(56),
-        quantity: new BigNumber(100),
+        quantity: intToTokenDecimals(100),
       };
       await this.registry.generateBatch(
         ...Object.values(newBatch),
@@ -439,7 +476,7 @@ contract('RheaGeRegistry Test', ([
         projectName: 'test 5',
         projectType: 'test type 5',
       };
-      await this.registry.addProject(
+      await this.registry.setProjectData(
         ...Object.values(projectData),
         { from: certifier1 }
       ).should.be.fulfilled;
@@ -459,7 +496,7 @@ contract('RheaGeRegistry Test', ([
         ...batchDataBase,
         serialNumber: '122',
         projectId: new BigNumber(561),
-        quantity: new BigNumber(100),
+        quantity: intToTokenDecimals(100),
       };
       await this.registry.generateBatch(
         ...Object.values(newBatch),
@@ -468,7 +505,7 @@ contract('RheaGeRegistry Test', ([
       ).should.be.fulfilled;
 
       const retiredAmountBefore = await this.registry.totalSupplyRetired();
-      const retireAmount = new BigNumber(10);
+      const retireAmount = intToTokenDecimals(10);
       await this.registry.retire(retireAmount, { from: rgtReceiver }).should.be.fulfilled;
 
       let totalRetiredAmount = await this.registry.totalSupplyRetired();
@@ -484,7 +521,7 @@ contract('RheaGeRegistry Test', ([
         ...batchDataBase,
         serialNumber: '123',
         projectId: new BigNumber(567),
-        quantity: new BigNumber(100),
+        quantity: intToTokenDecimals(100),
       };
       await this.registry.generateBatch(
         ...Object.values(newBatch),
@@ -493,7 +530,7 @@ contract('RheaGeRegistry Test', ([
       ).should.be.fulfilled;
 
       const balanceBefore = await this.registry.retiredBalances(rgtReceiver);
-      const retireAmount = new BigNumber(12);
+      const retireAmount = intToTokenDecimals(12);
       await this.registry.retire(retireAmount, { from: rgtReceiver }).should.be.fulfilled;
       const balance = await this.registry.retiredBalances(rgtReceiver);
       balance.should.be.bignumber.equal(balanceBefore.add(retireAmount));
@@ -503,8 +540,8 @@ contract('RheaGeRegistry Test', ([
   describe('Edge cases', () => {
     // TODO: find other possible edge cases with all existing flows
     it('if batch was generated with incorrect quantity should be able to update and manually mint', async function () {
-      const correctQuantity = new BigNumber(150000);
-      const incorrectQuantity = new BigNumber(15143);
+      const correctQuantity = intToTokenDecimals(150000);
+      const incorrectQuantity = intToTokenDecimals(15143);
       const quantityDiff = correctQuantity.sub(incorrectQuantity);
 
       const incorrectBatch = {
@@ -560,11 +597,9 @@ contract('RheaGeRegistry Test', ([
   // TODO: updateBatch() - should NOT update if batch has not been generated before
   // TODO: test all revert (require) cases that have not been tested
 
-  describe('#addProject() / #updateProject()', () => {
-    // TODO: should NOT add project if already added
-    // TODO: should NOT update if not added
-    it('#addProject() should write project to storage', async function () {
-      await this.registry.addProject(
+  describe('#setProjectData()', () => {
+    it('#setProjectData() should write project to storage', async function () {
+      await this.registry.setProjectData(
         ...Object.values(projectDataBase),
         { from: certifier1 }
       ).should.be.fulfilled;
@@ -580,7 +615,7 @@ contract('RheaGeRegistry Test', ([
       created.should.be.equal(true);
     });
 
-    it('#updateProject() should update existing project in storage', async function () {
+    it('#setProjectData() should update existing project in storage', async function () {
       const incorrectProject = {
         ...projectDataBase,
         projectId: new BigNumber(111),
@@ -592,7 +627,7 @@ contract('RheaGeRegistry Test', ([
         projectType: 'Forestry',
       };
 
-      await this.registry.addProject(
+      await this.registry.setProjectData(
         ...Object.values(incorrectProject),
         { from: certifier1 }
       ).should.be.fulfilled;
@@ -607,7 +642,7 @@ contract('RheaGeRegistry Test', ([
       projectTypeInc.should.be.equal(incorrectProject.projectType);
       createdInc.should.be.equal(true);
 
-      await this.registry.updateProject(
+      await this.registry.setProjectData(
         ...Object.values(correctProject),
         { from: certifier1 }
       ).should.be.fulfilled;

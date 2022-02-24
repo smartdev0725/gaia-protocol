@@ -31,15 +31,9 @@ interface IRGRegistry is Structs {
         address initialOwner
     ) external;
 
-    function addProject(
+    function setProjectData(
         uint256 projectId,
         string calldata name,
-        string calldata projectType
-    ) external;
-
-    function updateProject(
-        uint256 projectId,
-        string calldata projectName,
         string calldata projectType
     ) external;
 
