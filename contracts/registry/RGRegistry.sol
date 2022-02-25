@@ -14,7 +14,6 @@ contract RGRegistry is RGRegistryStorage, IRGRegistry {
     function init(
         address _rheaGeToken,
         address _roleManager
-    // TODO: proxy: figure out a good way to make this only callable by a Router
     ) external override onlyRouter initializer {
         require(_rheaGeToken != address(0), "RGRegistry: zero address passed as _rheaGeToken");
         rheaGeToken = _rheaGeToken;
@@ -31,6 +30,10 @@ contract RGRegistry is RGRegistryStorage, IRGRegistry {
         address mintTo
     ) external override onlyRole(CERTIFIER_ROLE) onlyRouter {
         require(!registeredBatches[serialNumber].created, "RGRegistry::generateBatch: Batch already created");
+        require (
+            !_isTokenFraction(quantity),
+            "RGRegistry::generateBatch: quantity cannot be a fraction"
+        );
 
         registeredBatches[serialNumber] = CCBatch(
             serialNumber,
@@ -69,6 +72,10 @@ contract RGRegistry is RGRegistryStorage, IRGRegistry {
         address initialOwner
     ) external override onlyRole(CERTIFIER_ROLE) onlyRouter {
         require(registeredBatches[serialNumber].created, "RGRegistry::generateBatch: Batch has not been added yet");
+        require (
+            !_isTokenFraction(quantity),
+            "RGRegistry::updateBatch: quantity cannot be a fraction"
+        );
 
         registeredBatches[serialNumber] = CCBatch(
             serialNumber,
@@ -93,41 +100,18 @@ contract RGRegistry is RGRegistryStorage, IRGRegistry {
         );
     }
 
-    function addProject(
+    function setProjectData(
         uint256 projectId,
         string calldata projectName,
         string calldata projectType
     ) external override onlyRole(CERTIFIER_ROLE) onlyRouter {
-        require(!registeredProjects[projectId].created, "RGRegistry::addProject: project has already been created");
-
         registeredProjects[projectId] = CCProject(
             projectName,
             projectType,
             true // created
         );
 
-        emit ProjectAdded(
-            projectId,
-            projectName,
-            projectType,
-            msg.sender // certifier
-        );
-    }
-
-    function updateProject(
-        uint256 projectId,
-        string calldata projectName,
-        string calldata projectType
-    ) external override onlyRole(CERTIFIER_ROLE) onlyRouter {
-        require(registeredProjects[projectId].created, "RGRegistry::addProject: project has not been created");
-
-        registeredProjects[projectId] = CCProject(
-            projectName,
-            projectType,
-            true // created
-        );
-
-        emit ProjectUpdated(
+        emit ProjectDataSet(
             projectId,
             projectName,
             projectType,
@@ -138,6 +122,11 @@ contract RGRegistry is RGRegistryStorage, IRGRegistry {
     function retire(
         uint256 carbonTokenAmount
     ) external override onlyRouter {
+        require (
+            !_isTokenFraction(carbonTokenAmount),
+            "RGRegistry::retire: can retire only non-fractional amounts"
+        );
+
         IRheaGeToken(rheaGeToken).burn(msg.sender, carbonTokenAmount);
         unchecked {
             retiredBalances[msg.sender] += carbonTokenAmount;
@@ -166,5 +155,9 @@ contract RGRegistry is RGRegistryStorage, IRGRegistry {
 
     function getRegisteredProject(uint256 id) external view override onlyRouter returns (CCProject memory) {
         return registeredProjects[id];
+    }
+
+    function _isTokenFraction(uint256 amount) internal view virtual returns (bool) {
+        return amount % (10 ** IRheaGeToken(rheaGeToken).decimals()) != 0;
     }
 }

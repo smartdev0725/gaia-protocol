@@ -1,4 +1,4 @@
-import { contractInstanceAt } from '@nomisma/nomisma-smart-contract-helpers';
+import { contractInstanceAt, BigNumber } from '@nomisma/nomisma-smart-contract-helpers';
 import { setupResolver } from './resolver';
 
 
@@ -38,3 +38,8 @@ export const deployRheaGeUpgradedMock = async (
 export const upgradedMockInterface = async (
   rgtAddress,
 ) => contractInstanceAt(IRheaGeUpgradedMock, rgtAddress);
+
+export const intToTokenDecimals = (amount) => {
+  const decimalsFactor = new BigNumber(10).pow(new BigNumber(18));
+  return new BigNumber(amount).mul(decimalsFactor);
+};
