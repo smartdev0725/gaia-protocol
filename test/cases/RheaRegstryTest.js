@@ -188,7 +188,7 @@ contract('RheaGeRegistry Test', ([
         ...Object.values(newBatch),
         rgtReceiver,
         { from: certifier1 }
-      ).should.be.rejectedWith('RGRegistry::generateBatch: quantity is a fraction');
+      ).should.be.rejectedWith('RGRegistry::generateBatch: quantity cannot be a fraction');
     });
 
     it('should revert updateBatch when quantity is a fraction', async function () {
@@ -213,7 +213,7 @@ contract('RheaGeRegistry Test', ([
         ...Object.values(correctBatch),
         rgtReceiver,
         { from: certifier1 }
-      ).should.be.rejectedWith('RGRegistry::updateBatch: quantity is a fraction');
+      ).should.be.rejectedWith('RGRegistry::updateBatch: quantity cannot be a fraction');
     });
   });
 
@@ -293,13 +293,63 @@ contract('RheaGeRegistry Test', ([
       await this.registry.retire(
         retireAmount1,
         { from: rgtReceiver }
-      ).should.be.rejectedWith('RGRegistry::retire: token amount is a fraction');
+      ).should.be.rejectedWith('RGRegistry::retire: can retire only non-fractional amounts');
 
-      const retireAmount2 = new BigNumber('999999999999999999');
+      const retireAmount2 = new BigNumber('8543210678021340564056392755329843758284656389');
       await this.registry.retire(
         retireAmount2,
         { from: rgtReceiver }
-      ).should.be.rejectedWith('RGRegistry::retire: token amount is a fraction');
+      ).should.be.rejectedWith('RGRegistry::retire: can retire only non-fractional amounts');
+
+      const retireAmount3 = new BigNumber('999999999999999999');
+      await this.registry.retire(
+        retireAmount3,
+        { from: rgtReceiver }
+      ).should.be.rejectedWith('RGRegistry::retire: can retire only non-fractional amounts');
+
+      const retireAmount4 = new BigNumber('42');
+      await this.registry.retire(
+        retireAmount4,
+        { from: rgtReceiver }
+      ).should.be.rejectedWith('RGRegistry::retire: can retire only non-fractional amounts');
+
+      const retireAmount5 = new BigNumber('1234567890');
+      await this.registry.retire(
+        retireAmount5,
+        { from: rgtReceiver }
+      ).should.be.rejectedWith('RGRegistry::retire: can retire only non-fractional amounts');
+    });
+
+    it('should retire using whole numbers', async function () {
+      const newBatch = {
+        ...batchDataBase,
+        quantity: intToTokenDecimals('9999992549857636392756320932746587328423'),
+        serialNumber: '141553135',
+      };
+
+      await this.registry.generateBatch(
+        ...Object.values(newBatch),
+        rgtReceiver,
+        { from: certifier1 }
+      );
+
+      const retireAmount1 = new BigNumber('1000000000000000000');
+      await this.registry.retire(
+        retireAmount1,
+        { from: rgtReceiver }
+      ).should.be.fulfilled;
+
+      const retireAmount2 = new BigNumber('2000000000000000000');
+      await this.registry.retire(
+        retireAmount2,
+        { from: rgtReceiver }
+      ).should.be.fulfilled;
+
+      const retireAmount3 = new BigNumber('2549857636392756320932746587328423000000000000000000');
+      await this.registry.retire(
+        retireAmount3,
+        { from: rgtReceiver }
+      ).should.be.fulfilled;
     });
   });
 

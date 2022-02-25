@@ -32,7 +32,7 @@ contract RGRegistry is RGRegistryStorage, IRGRegistry {
         require(!registeredBatches[serialNumber].created, "RGRegistry::generateBatch: Batch already created");
         require (
             !_isTokenFraction(quantity),
-            "RGRegistry::generateBatch: quantity is a fraction"
+            "RGRegistry::generateBatch: quantity cannot be a fraction"
         );
 
         registeredBatches[serialNumber] = CCBatch(
@@ -74,7 +74,7 @@ contract RGRegistry is RGRegistryStorage, IRGRegistry {
         require(registeredBatches[serialNumber].created, "RGRegistry::generateBatch: Batch has not been added yet");
         require (
             !_isTokenFraction(quantity),
-            "RGRegistry::updateBatch: quantity is a fraction"
+            "RGRegistry::updateBatch: quantity cannot be a fraction"
         );
 
         registeredBatches[serialNumber] = CCBatch(
@@ -124,7 +124,7 @@ contract RGRegistry is RGRegistryStorage, IRGRegistry {
     ) external override onlyRouter {
         require (
             !_isTokenFraction(carbonTokenAmount),
-            "RGRegistry::retire: token amount is a fraction"
+            "RGRegistry::retire: can retire only non-fractional amounts"
         );
 
         IRheaGeToken(rheaGeToken).burn(msg.sender, carbonTokenAmount);
