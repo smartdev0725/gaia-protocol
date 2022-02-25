@@ -318,6 +318,12 @@ contract('RheaGeRegistry Test', ([
         retireAmount5,
         { from: rgtReceiver }
       ).should.be.rejectedWith('RGRegistry::retire: can retire only non-fractional amounts');
+
+      const retireAmount6 = new BigNumber('900000000000000000');
+      await this.registry.retire(
+        retireAmount6,
+        { from: rgtReceiver }
+      ).should.be.rejectedWith('RGRegistry::retire: can retire only non-fractional amounts');
     });
 
     it('should retire using whole numbers', async function () {
