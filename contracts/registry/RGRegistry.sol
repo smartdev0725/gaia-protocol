@@ -14,7 +14,6 @@ contract RGRegistry is RGRegistryStorage, IRGRegistry {
     function init(
         address _rheaGeToken,
         address _roleManager
-    // TODO: proxy: figure out a good way to make this only callable by a Router
     ) external override onlyRouter initializer {
         require(_rheaGeToken != address(0), "RGRegistry: zero address passed as _rheaGeToken");
         rheaGeToken = _rheaGeToken;
