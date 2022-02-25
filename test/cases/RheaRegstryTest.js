@@ -4,7 +4,7 @@ import {
   sha3,
 } from '@nomisma/nomisma-smart-contract-helpers';
 import { deployRegistry } from '../helpers/registry';
-import { deployRheaGeToken, intToTokenDecimals } from '../helpers/rgt';
+import { deployGaiaToken, intToTokenDecimals } from '../helpers/rgt';
 import { roleNames } from '../helpers/roles';
 
 require('chai')
@@ -21,7 +21,7 @@ const {
   CERTIFIER_ROLE,
 } = roleNames;
 
-contract('RheaGeRegistry Test', ([
+contract('RGRegistry Test', ([
   governor,
   certifier1,
   certifier2,
@@ -47,10 +47,10 @@ contract('RheaGeRegistry Test', ([
 
   before(async function () {
     this.roleManager = await RoleManager.new([ governor ], '1');
-    this.rheaGe = (await deployRheaGeToken(this.roleManager.address, governor)).token;
+    this.gaia = (await deployGaiaToken(this.roleManager.address, governor)).token;
 
     this.registry = await deployRegistry(
-      this.rheaGe.address,
+      this.gaia.address,
       this.roleManager.address,
       governor
     );
@@ -88,7 +88,7 @@ contract('RheaGeRegistry Test', ([
         ...batchDataBase,
         serialNumber: '131553135',
       };
-      const receiverBalBefore = await this.rheaGe.balanceOf(rgtReceiver);
+      const receiverBalBefore = await this.gaia.balanceOf(rgtReceiver);
 
       await this.registry.generateBatch(
         ...Object.values(newBatch),
@@ -116,7 +116,7 @@ contract('RheaGeRegistry Test', ([
       certificationsOrObjectivesSC.should.be.equal(newBatch.certifications);
       created.should.be.equal(true);
 
-      const receiverBalAfter = await this.rheaGe.balanceOf(rgtReceiver);
+      const receiverBalAfter = await this.gaia.balanceOf(rgtReceiver);
       receiverBalAfter.sub(receiverBalBefore).should.be.bignumber.equal(newBatch.quantity);
       receiverBalAfter.sub(receiverBalBefore).should.be.bignumber.equal(quantitySC);
     });
@@ -145,7 +145,7 @@ contract('RheaGeRegistry Test', ([
         ...batchDataBase,
         serialNumber: '131553-ABDS-135',
       };
-      const receiverBalBefore = await this.rheaGe.balanceOf(rgtReceiver);
+      const receiverBalBefore = await this.gaia.balanceOf(rgtReceiver);
 
       await this.registry.generateBatch(
         ...Object.values(newBatch),
@@ -173,7 +173,7 @@ contract('RheaGeRegistry Test', ([
       certificationsOrObjectivesSC.should.be.equal(newBatch.certifications);
       created.should.be.equal(true);
 
-      const receiverBalAfter = await this.rheaGe.balanceOf(rgtReceiver);
+      const receiverBalAfter = await this.gaia.balanceOf(rgtReceiver);
       receiverBalAfter.sub(receiverBalBefore).should.be.bignumber.equal(new BigNumber(0));
     });
 
@@ -234,16 +234,16 @@ contract('RheaGeRegistry Test', ([
         { from: certifier1 }
       ).should.be.fulfilled;
 
-      await this.rheaGe.transfer(offsetter1, tokenAmtBought, { from: rgtReceiver });
+      await this.gaia.transfer(offsetter1, tokenAmtBought, { from: rgtReceiver });
 
-      const offsetterBalanceBefore = await this.rheaGe.balanceOf(offsetter1);
+      const offsetterBalanceBefore = await this.gaia.balanceOf(offsetter1);
 
       await this.registry.retire(tokenAmtRetire1, { from: offsetter1 }).should.be.fulfilled;
 
       // for checking proper storage updates
       await this.registry.retire(tokenAmtRetire2, { from: rgtReceiver }).should.be.fulfilled;
 
-      const offsetterBalanceAfter = await this.rheaGe.balanceOf(offsetter1);
+      const offsetterBalanceAfter = await this.gaia.balanceOf(offsetter1);
 
       offsetterBalanceBefore.sub(offsetterBalanceAfter).should.be.bignumber.equal(tokenAmtRetire1);
       offsetterBalanceAfter.should.be.bignumber.equal(tokenAmtBought.sub(tokenAmtRetire1));
@@ -419,24 +419,24 @@ contract('RheaGeRegistry Test', ([
 
     // TODO: describe('Events', () => {}); test all events on Registry
 
-    it('should NOT setRheaGeToken to zero address', async function () {
-      await this.registry.setRheaGeToken(
+    it('should NOT setGaiaToken to zero address', async function () {
+      await this.registry.setGaiaToken(
         zeroAddress,
         { from: governor }
       ).should.be.rejected;
     });
 
-    it('should NOT setRheaGeToken if the address is not a contract', async function () {
+    it('should NOT setGaiaToken if the address is not a contract', async function () {
       const firstAddress = '0x0000000000000000000000000000000000000001';
-      await this.registry.setRheaGeToken(
+      await this.registry.setGaiaToken(
         firstAddress,
         { from: governor }
       ).should.be.rejected;
     });
 
-    it('should NOT setRheaGeToken without GOVERNOR_ROLE', async function () {
-      await this.registry.setRheaGeToken(
-        this.rheaGe.address,
+    it('should NOT setGaiaToken without GOVERNOR_ROLE', async function () {
+      await this.registry.setGaiaToken(
+        this.gaia.address,
         { from: certifier1 }
       ).should.be.rejectedWith('RoleAware: Permission denied to execute this function');
     });
@@ -464,7 +464,7 @@ contract('RheaGeRegistry Test', ([
       batchGeneratedEvent.initialRgtOwner.should.be.equal(rgtReceiver);
       batchGeneratedEvent.certifier.should.be.equal(certifier1);
 
-      const transferEvent = (await this.rheaGe.getPastEvents('Transfer')).at(-1).args;
+      const transferEvent = (await this.gaia.getPastEvents('Transfer')).at(-1).args;
       transferEvent.from.should.be.equal(zeroAddress);
       transferEvent.to.should.be.equal(rgtReceiver);
       transferEvent.value.should.be.bignumber.equal(newBatch.quantity);
@@ -491,7 +491,7 @@ contract('RheaGeRegistry Test', ([
       const tokenAmount = intToTokenDecimals(123);
       await this.registry.retire(tokenAmount, { from: rgtReceiver }).should.be.fulfilled;
 
-      const transferEvent = (await this.rheaGe.getPastEvents('Transfer')).at(-1).args;
+      const transferEvent = (await this.gaia.getPastEvents('Transfer')).at(-1).args;
       transferEvent.from.should.be.equal(rgtReceiver);
       transferEvent.to.should.be.equal(zeroAddress);
       transferEvent.value.should.be.bignumber.equal(tokenAmount);
@@ -542,9 +542,9 @@ contract('RheaGeRegistry Test', ([
       registeredProject.created.should.be.equal(true);
     });
 
-    it('should get the address of the rheaGeToken', async function () {
-      const token = await this.registry.rheaGeToken();
-      token.should.be.equal(this.rheaGe.address);
+    it('should get the address of the gaiaToken', async function () {
+      const token = await this.registry.gaiaToken();
+      token.should.be.equal(this.gaia.address);
     });
 
     it('should get totalSupplyRetired', async function () {
@@ -611,7 +611,7 @@ contract('RheaGeRegistry Test', ([
         quantity: correctQuantity,
       };
 
-      const receiverBalBefore = await this.rheaGe.balanceOf(rgtReceiver);
+      const receiverBalBefore = await this.gaia.balanceOf(rgtReceiver);
 
       await this.registry.generateBatch(
         ...Object.values(incorrectBatch),
@@ -619,7 +619,7 @@ contract('RheaGeRegistry Test', ([
         { from: certifier1 }
       );
 
-      const receiverBalAfterIncorrect = await this.rheaGe.balanceOf(rgtReceiver);
+      const receiverBalAfterIncorrect = await this.gaia.balanceOf(rgtReceiver);
 
       receiverBalAfterIncorrect.sub(receiverBalBefore).should.be.bignumber.equal(incorrectQuantity);
 
@@ -632,9 +632,9 @@ contract('RheaGeRegistry Test', ([
         { from: certifier1 }
       );
 
-      await this.rheaGe.mint(rgtReceiver, quantityDiff, { from: certifier1 });
+      await this.gaia.mint(rgtReceiver, quantityDiff, { from: certifier1 });
 
-      const receiverBalFinal = await this.rheaGe.balanceOf(rgtReceiver);
+      const receiverBalFinal = await this.gaia.balanceOf(rgtReceiver);
 
       const finalBatchFromSC = await this.registry.registeredBatches(incorrectBatch.serialNumber);
 
@@ -716,7 +716,7 @@ contract('RheaGeRegistry Test', ([
   });
 
   it('should NOT initialize twice', async function () {
-    await this.registry.init(this.rheaGe.address, this.roleManager.address)
+    await this.registry.init(this.gaia.address, this.roleManager.address)
       .should.be.rejectedWith('Initializable: contract is already initialized');
   });
 });

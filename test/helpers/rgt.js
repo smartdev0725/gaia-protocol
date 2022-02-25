@@ -2,42 +2,42 @@ import { contractInstanceAt, BigNumber } from '@nomisma/nomisma-smart-contract-h
 import { setupResolver } from './resolver';
 
 
-const RheaGeTokenRouter = artifacts.require('./RheaGeTokenRouter.sol');
-const RheaGeToken = artifacts.require('./RheaGeToken.sol');
-const IRheaGeToken = artifacts.require('./IRheaGeToken.sol');
+const GaiaTokenRouter = artifacts.require('./GaiaTokenRouter.sol');
+const GaiaToken = artifacts.require('./GaiaToken.sol');
+const IGaiaToken = artifacts.require('./IGaiaToken.sol');
 
-const RheaGeUpgradedMock = artifacts.require('./RheaGeUpgradedMock.sol');
-const IRheaGeUpgradedMock = artifacts.require('./IRheaGeUpgradedMock.sol');
+const GaiaUpgradedMock = artifacts.require('./GaiaUpgradedMock.sol');
+const IGaiaUpgradedMock = artifacts.require('./IGaiaUpgradedMock.sol');
 
-export const deployRheaGeToken = async (
+export const deployGaiaToken = async (
   roleManager,
   governor
 ) => {
-  const rgtImpl = await RheaGeToken.new();
+  const rgtImpl = await GaiaToken.new();
   const rgtResolver = await setupResolver(
     [ rgtImpl ],
     roleManager,
     governor
   );
 
-  const rgtRouter = await RheaGeTokenRouter.new(
+  const rgtRouter = await GaiaTokenRouter.new(
     roleManager,
     rgtResolver.address,
     { from: governor }
   );
 
   return {
-    token: await contractInstanceAt(IRheaGeToken, rgtRouter.address),
+    token: await contractInstanceAt(IGaiaToken, rgtRouter.address),
     resolver: rgtResolver,
   };
 };
 
-export const deployRheaGeUpgradedMock = async (
-) => RheaGeUpgradedMock.new();
+export const deployGaiaUpgradedMock = async (
+) => GaiaUpgradedMock.new();
 
 export const upgradedMockInterface = async (
   rgtAddress,
-) => contractInstanceAt(IRheaGeUpgradedMock, rgtAddress);
+) => contractInstanceAt(IGaiaUpgradedMock, rgtAddress);
 
 export const intToTokenDecimals = (amount) => {
   const decimalsFactor = new BigNumber(10).pow(new BigNumber(18));

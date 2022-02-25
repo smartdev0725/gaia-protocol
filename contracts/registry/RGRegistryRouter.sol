@@ -17,7 +17,7 @@ contract RGRegistryRouter is Router, Delegator {
     );
 
     constructor(
-        address _rheaGeToken,
+        address _gaiaToken,
         address _resolver,
         address _roleManager
     ) {
@@ -27,7 +27,7 @@ contract RGRegistryRouter is Router, Delegator {
 
         bytes memory args = abi.encodeWithSelector(
             INIT_SIG,
-            _rheaGeToken,
+            _gaiaToken,
             _roleManager
         );
 

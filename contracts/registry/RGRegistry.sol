@@ -4,7 +4,7 @@ pragma solidity ^0.8.11;
 import "@openzeppelin/contracts-upgradeable/token/ERC20/utils/SafeERC20Upgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/token/ERC20/IERC20Upgradeable.sol";
 import "../access/RoleAware.sol";
-import "../tokens/rgt/IRheaGeToken.sol";
+import "../tokens/rgt/IGaiaToken.sol";
 import "./IRGRegistry.sol";
 import "./RGRegistryStorage.sol";
 
@@ -12,11 +12,11 @@ import "./RGRegistryStorage.sol";
 contract RGRegistry is RGRegistryStorage, IRGRegistry {
 
     function init(
-        address _rheaGeToken,
+        address _gaiaToken,
         address _roleManager
     ) external override onlyRouter initializer {
-        require(_rheaGeToken != address(0), "RGRegistry: zero address passed as _rheaGeToken");
-        rheaGeToken = _rheaGeToken;
+        require(_gaiaToken != address(0), "RGRegistry: zero address passed as _gaiaToken");
+        gaiaToken = _gaiaToken;
         setRoleManager(_roleManager);
     }
 
@@ -58,7 +58,7 @@ contract RGRegistry is RGRegistryStorage, IRGRegistry {
         );
 
         if (mintTo != address(0)) {
-            IRheaGeToken(rheaGeToken).mint(mintTo, quantity);
+            IGaiaToken(gaiaToken).mint(mintTo, quantity);
         }
     }
 
@@ -127,7 +127,7 @@ contract RGRegistry is RGRegistryStorage, IRGRegistry {
             "RGRegistry::retire: can retire only non-fractional amounts"
         );
 
-        IRheaGeToken(rheaGeToken).burn(msg.sender, carbonTokenAmount);
+        IGaiaToken(gaiaToken).burn(msg.sender, carbonTokenAmount);
         unchecked {
             retiredBalances[msg.sender] += carbonTokenAmount;
             totalSupplyRetired += carbonTokenAmount;
@@ -139,14 +139,14 @@ contract RGRegistry is RGRegistryStorage, IRGRegistry {
         );
     }
 
-    function setRheaGeToken(address _rheaGeToken) external override onlyRole(GOVERNOR_ROLE) onlyRouter {
+    function setGaiaToken(address _gaiaToken) external override onlyRole(GOVERNOR_ROLE) onlyRouter {
         require(
-            _rheaGeToken != address(0),
-            "RGRegistry::generateBatch: 0x0 address passed as rheaGeTokenAddress"
+            _gaiaToken != address(0),
+            "RGRegistry::generateBatch: 0x0 address passed as gaiaTokenAddress"
         );
-        require(IRheaGeToken(_rheaGeToken).totalSupply() >= 0, "RGRegistry::setRheaGeToken: totalSupply is missing");
-        require(IRheaGeToken(_rheaGeToken).decimals() > 0, "RGRegistry::setRheaGeToken: decimals is missing");
-        rheaGeToken = _rheaGeToken;
+        require(IGaiaToken(_gaiaToken).totalSupply() >= 0, "RGRegistry::setGaiaToken: totalSupply is missing");
+        require(IGaiaToken(_gaiaToken).decimals() > 0, "RGRegistry::setGaiaToken: decimals is missing");
+        gaiaToken = _gaiaToken;
     }
 
     function getRegisteredBatch(string calldata serialNumber) external view override onlyRouter returns (CCBatch memory) {
@@ -158,6 +158,6 @@ contract RGRegistry is RGRegistryStorage, IRGRegistry {
     }
 
     function _isTokenFraction(uint256 amount) internal view virtual returns (bool) {
-        return amount % (10 ** IRheaGeToken(rheaGeToken).decimals()) != 0;
+        return amount % (10 ** IGaiaToken(gaiaToken).decimals()) != 0;
     }
 }

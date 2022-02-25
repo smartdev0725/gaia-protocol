@@ -15,7 +15,7 @@ contract RGRegistryStorage is
     OnlyRouterAccess,
     IRGRegistryStorage {
 
-    address public override rheaGeToken;
+    address public override gaiaToken;
 
     mapping(string => CCBatch) public registeredBatches;
     mapping(uint256 => CCProject) public registeredProjects;

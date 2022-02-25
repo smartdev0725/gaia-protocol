@@ -40,7 +40,7 @@ interface IRGRegistryStorage is Structs {
     );
 
     // storage getters
-    function rheaGeToken() external view returns (address);
+    function gaiaToken() external view returns (address);
 
     function totalSupplyRetired() external view returns (uint256);
 
