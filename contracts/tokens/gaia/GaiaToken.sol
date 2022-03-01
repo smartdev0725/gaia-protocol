@@ -12,7 +12,7 @@ contract GaiaToken is RoleAware, ERC20Upgradeable, OnlyRouterAccess, IGaiaToken 
     function init(
         address _roleManager
     ) external override onlyRouter initializer {
-        super.__ERC20_init("Gaia Token", "RGT");
+        super.__ERC20_init("Gaia Token", "GAIA");
         setRoleManager(_roleManager);
     }
 
