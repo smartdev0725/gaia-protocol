@@ -6,9 +6,7 @@ import "../../proxy-base/Delegator.sol";
 import "../../proxy-base/Resolver.sol";
 
 
-// TODO: test an upgrade of storage and functionality of this proxy module !!!
-// TODO: to make sure we do not corrupt the storage and can extend both storage and functionality
-contract RheaGeTokenRouter is Router, Delegator {
+contract GaiaTokenRouter is Router, Delegator {
 
     bytes4 internal constant INIT_SIG = bytes4(
         keccak256(
@@ -34,8 +32,7 @@ contract RheaGeTokenRouter is Router, Delegator {
         delegate(
             initializer,
             args,
-            "delegatecall() failed in RGRegistryRouter.constructor"
+            "delegatecall() failed in GaiaRegistryRouter.constructor"
         );
     }
-
 }

@@ -6,9 +6,14 @@ import "@openzeppelin/contracts-upgradeable/token/ERC20/IERC20Upgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/token/ERC20/extensions/IERC20MetadataUpgradeable.sol";
 
 
-interface IRheaGeUpgradedMock is IERC20Upgradeable, IERC20MetadataUpgradeable {
-    event RheaGeTokensMinted(
+interface IGaiaToken is IERC20Upgradeable, IERC20MetadataUpgradeable {
+    event GaiaTokensMinted(
         address indexed to,
+        uint256 amount
+    );
+
+    event GaiaTokensBurned(
+        address indexed from,
         uint256 amount
     );
 
@@ -18,7 +23,5 @@ interface IRheaGeUpgradedMock is IERC20Upgradeable, IERC20MetadataUpgradeable {
 
     function mint(address to, uint256 amount) external;
 
-    function setVersion(uint256 _version) external;
-
-    function version() external view returns (uint256);
+    function burn(address account, uint256 amount) external;
 }

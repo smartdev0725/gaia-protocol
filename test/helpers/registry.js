@@ -2,12 +2,12 @@ import { contractInstanceAt } from '@nomisma/nomisma-smart-contract-helpers';
 import { setupResolver } from './resolver';
 
 
-const Registry = artifacts.require('./RGRegistry.sol');
-const RegistryInterface = artifacts.require('./IRGRegistryMain.sol');
-const RegistryRouter = artifacts.require('./RGRegistryRouter.sol');
+const Registry = artifacts.require('./GaiaRegistry.sol');
+const RegistryInterface = artifacts.require('./IGaiaRegistryMain.sol');
+const RegistryRouter = artifacts.require('./GaiaRegistryRouter.sol');
 
 export const deployRegistry = async (
-  rgToken,
+  gaiaToken,
   roleManager,
   governor
 ) => {
@@ -18,7 +18,7 @@ export const deployRegistry = async (
     governor
   );
   const regRouter = await RegistryRouter.new(
-    rgToken,
+    gaiaToken,
     regResolver.address,
     roleManager,
     { from: governor }

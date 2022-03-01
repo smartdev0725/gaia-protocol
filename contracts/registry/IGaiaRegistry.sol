@@ -4,10 +4,10 @@ pragma solidity ^0.8.11;
 import "../structs/Structs.sol";
 
 
-interface IRGRegistry is Structs {
+interface IGaiaRegistry is Structs {
 
     function init(
-        address _rheaGeToken,
+        address _gaiaToken,
         address _roleManager
     ) external;
 
@@ -41,7 +41,7 @@ interface IRGRegistry is Structs {
         uint256 carbonTonAmt
     ) external;
 
-    function setRheaGeToken(address _rheaGeToken) external;
+    function setGaiaToken(address _gaiaToken) external;
 
     function getRegisteredBatch(string calldata serialNumber) external view returns (CCBatch memory);
 

@@ -6,7 +6,7 @@ import "../proxy-base/Delegator.sol";
 import "../proxy-base/Resolver.sol";
 
 
-contract RGRegistryRouter is Router, Delegator {
+contract GaiaRegistryRouter is Router, Delegator {
 
     bytes4 internal constant INIT_SIG = bytes4(
         keccak256(
@@ -17,7 +17,7 @@ contract RGRegistryRouter is Router, Delegator {
     );
 
     constructor(
-        address _rheaGeToken,
+        address _gaiaToken,
         address _resolver,
         address _roleManager
     ) {
@@ -27,14 +27,14 @@ contract RGRegistryRouter is Router, Delegator {
 
         bytes memory args = abi.encodeWithSelector(
             INIT_SIG,
-            _rheaGeToken,
+            _gaiaToken,
             _roleManager
         );
 
         delegate(
             initializer,
             args,
-            "delegatecall() failed in RGRegistryRouter.constructor"
+            "delegatecall() failed in GaiaRegistryRouter.constructor"
         );
     }
 }

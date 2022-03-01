@@ -10,7 +10,7 @@ interface Structs {
         string creditType;
         uint256 quantity;
         string certificationsOrObjectives;
-        address initialRgtOwner;
+        address initialGaiaOwner;
         bool created;
     }
 
