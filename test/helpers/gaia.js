@@ -13,22 +13,22 @@ export const deployGaiaToken = async (
   roleManager,
   governor
 ) => {
-  const rgtImpl = await GaiaToken.new();
-  const rgtResolver = await setupResolver(
-    [ rgtImpl ],
+  const gaiaImpl = await GaiaToken.new();
+  const gaiaResolver = await setupResolver(
+    [ gaiaImpl ],
     roleManager,
     governor
   );
 
-  const rgtRouter = await GaiaTokenRouter.new(
+  const gaiaRouter = await GaiaTokenRouter.new(
     roleManager,
-    rgtResolver.address,
+    gaiaResolver.address,
     { from: governor }
   );
 
   return {
-    token: await contractInstanceAt(IGaiaToken, rgtRouter.address),
-    resolver: rgtResolver,
+    token: await contractInstanceAt(IGaiaToken, gaiaRouter.address),
+    resolver: gaiaResolver,
   };
 };
 
@@ -36,8 +36,8 @@ export const deployGaiaUpgradedMock = async (
 ) => GaiaUpgradedMock.new();
 
 export const upgradedMockInterface = async (
-  rgtAddress,
-) => contractInstanceAt(IGaiaUpgradedMock, rgtAddress);
+  gaiaAddress,
+) => contractInstanceAt(IGaiaUpgradedMock, gaiaAddress);
 
 export const intToTokenDecimals = (amount) => {
   const decimalsFactor = new BigNumber(10).pow(new BigNumber(18));

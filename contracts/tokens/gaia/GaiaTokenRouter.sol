@@ -34,7 +34,7 @@ contract GaiaTokenRouter is Router, Delegator {
         delegate(
             initializer,
             args,
-            "delegatecall() failed in RGRegistryRouter.constructor"
+            "delegatecall() failed in GaiaRegistryRouter.constructor"
         );
     }
 

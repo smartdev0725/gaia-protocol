@@ -2,7 +2,7 @@ import {
   getChaiBN,
   BigNumber,
 } from '@nomisma/nomisma-smart-contract-helpers';
-import { deployGaiaToken } from '../helpers/rgt';
+import { deployGaiaToken } from '../helpers/gaia';
 
 import {
   roleNames,
@@ -23,7 +23,7 @@ const {
 const RoleManager = artifacts.require('./RoleManager.sol');
 
 export const tokenName = 'Gaia Token';
-export const tokenSymbol = 'RGT'; // TODO name: fix this once finalized
+export const tokenSymbol = 'GAIA';
 
 
 contract('GaiaToken Basic Tests', ([

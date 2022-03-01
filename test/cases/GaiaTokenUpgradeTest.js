@@ -8,7 +8,7 @@ import {
   deployGaiaToken,
   deployGaiaUpgradedMock,
   upgradedMockInterface,
-} from '../helpers/rgt';
+} from '../helpers/gaia';
 
 import {
   roleNames,
@@ -29,7 +29,7 @@ const RoleManager = artifacts.require('./RoleManager.sol');
 const Resolver = artifacts.require('./Resolver.sol');
 
 export const tokenName = 'Gaia Token';
-export const tokenSymbol = 'RGT';
+export const tokenSymbol = 'GAIA';
 
 
 contract('GaiaToken Upgrade Tests', ([

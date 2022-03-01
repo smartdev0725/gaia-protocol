@@ -6,7 +6,7 @@ import "../proxy-base/Delegator.sol";
 import "../proxy-base/Resolver.sol";
 
 
-contract RGRegistryRouter is Router, Delegator {
+contract GaiaRegistryRouter is Router, Delegator {
 
     bytes4 internal constant INIT_SIG = bytes4(
         keccak256(
@@ -34,7 +34,7 @@ contract RGRegistryRouter is Router, Delegator {
         delegate(
             initializer,
             args,
-            "delegatecall() failed in RGRegistryRouter.constructor"
+            "delegatecall() failed in GaiaRegistryRouter.constructor"
         );
     }
 }

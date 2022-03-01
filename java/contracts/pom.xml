@@ -5,11 +5,11 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>one.nomisma.ccp</groupId>
-    <artifactId>rhea-ge-contracts-abi</artifactId>
+    <artifactId>gaia-contracts-abi</artifactId>
     <version>v0.0.1</version>
 
-    <name>RheaGe Contracts abi</name>
-    <description>RheaGe Contracts abi json files</description>
+    <name>Gaia Contracts abi</name>
+    <description>Gaia Contracts abi json files</description>
 
     <build>
         <resources>

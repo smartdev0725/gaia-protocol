@@ -4,7 +4,7 @@ pragma solidity ^0.8.11;
 import "../structs/Structs.sol";
 
 
-interface IRGRegistry is Structs {
+interface IGaiaRegistry is Structs {
 
     function init(
         address _gaiaToken,

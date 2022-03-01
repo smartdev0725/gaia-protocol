@@ -4,7 +4,7 @@ pragma solidity ^0.8.11;
 import "../structs/Structs.sol";
 
 
-interface IRGRegistryStorage is Structs {
+interface IGaiaRegistryStorage is Structs {
     event BatchGenerated(
         string serialNumber,
         uint256 projectId,
@@ -12,7 +12,7 @@ interface IRGRegistryStorage is Structs {
         string indexed creditType,
         uint256 quantity,
         string certificationsOrObjectives,
-        address initialRgtOwner,
+        address initialGaiaOwner,
         address indexed certifier
     );
 
@@ -23,7 +23,7 @@ interface IRGRegistryStorage is Structs {
         string indexed creditType,
         uint256 quantity,
         string certificationsOrObjectives,
-        address initialRgtOwner,
+        address initialGaiaOwner,
         address indexed certifier
     );
 
