@@ -6,7 +6,7 @@
 
     <groupId>one.nomisma.ccp</groupId>
     <artifactId>gaia-contracts-abi</artifactId>
-    <version>v0.0.1</version>
+    <version>v0.1.0</version>
 
     <name>Gaia Contracts abi</name>
     <description>Gaia Contracts abi json files</description>
@@ -25,8 +25,8 @@
     <distributionManagement>
         <repository>
             <id>github</id>
-            <name>GitHub NomismaTech rhea-ge-protocol Apache Maven Packages</name>
-            <url>https://maven.pkg.github.com/NomismaTech/rhea-ge-protocol</url>
+            <name>GitHub NomismaTech gaia-protocol Apache Maven Packages</name>
+            <url>https://maven.pkg.github.com/NomismaTech/gaia-protocol</url>
         </repository>
     </distributionManagement>
 </project>
