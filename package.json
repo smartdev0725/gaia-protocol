@@ -1,6 +1,6 @@
 {
-  "name": "@nomisma/rhea-ge-protocol",
-  "version": "0.0.1",
+  "name": "@nomisma/gaia-protocol",
+  "version": "0.1.0",
   "description": "Protocol for Carbon Credit tokenization",
   "engines": {
     "node": ">=16",
