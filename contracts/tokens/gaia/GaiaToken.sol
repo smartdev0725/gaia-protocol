@@ -10,9 +10,11 @@ import "../../utils/OnlyRouterAccess.sol";
 contract GaiaToken is RoleAware, ERC20Upgradeable, OnlyRouterAccess, IGaiaToken {
 
     function init(
+        string memory name, 
+        string memory symbol,
         address _roleManager
     ) external override onlyRouter initializer {
-        super.__ERC20_init("Gaia Token", "GAIA");
+        super.__ERC20_init(name, symbol);
         setRoleManager(_roleManager);
     }
 

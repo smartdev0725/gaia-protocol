@@ -18,6 +18,8 @@ interface IGaiaToken is IERC20Upgradeable, IERC20MetadataUpgradeable {
     );
 
     function init(
+        string memory name, 
+        string memory symbol,
         address _roleManager
     ) external;
 
