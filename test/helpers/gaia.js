@@ -1,3 +1,4 @@
+import { ethers } from 'ethers';
 import { contractInstanceAt, BigNumber } from '@nomisma/nomisma-smart-contract-helpers';
 import { setupResolver } from './resolver';
 
@@ -10,6 +11,8 @@ const GaiaUpgradedMock = artifacts.require('./GaiaUpgradedMock.sol');
 const IGaiaUpgradedMock = artifacts.require('./IGaiaUpgradedMock.sol');
 
 export const deployGaiaToken = async (
+  tokenName,
+  tokenSymbol,
   roleManager,
   governor
 ) => {
@@ -20,7 +23,14 @@ export const deployGaiaToken = async (
     governor
   );
 
+  const encodedArguments = ethers.utils.defaultAbiCoder.encode(
+    [ 'string', 'string', 'address' ],
+    [ tokenName, tokenSymbol, roleManager ]
+  );
+
   const gaiaRouter = await GaiaTokenRouter.new(
+    'init(string,string,address)',
+    encodedArguments,
     roleManager,
     gaiaResolver.address,
     { from: governor }

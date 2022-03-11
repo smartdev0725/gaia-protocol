@@ -12,9 +12,11 @@ contract GaiaUpgradedMock is RoleAware, ERC20Upgradeable, OnlyRouterAccess, IGai
     uint256 public override version;
 
     function init(
+        string memory name, 
+        string memory symbol,
         address _roleManager
     ) external override onlyRouter initializer {
-        super.__ERC20_init("Gaia Token", "GAIA");
+        super.__ERC20_init(name, symbol);
         setRoleManager(_roleManager);
     }
 

@@ -53,7 +53,12 @@ contract('GaiaToken Upgrade Tests', ([
       [ MINTER_ROLE, BURNER_ROLE, MOCK_ROLE ],
       { from: governor }
     );
-    const deployment = await deployGaiaToken(this.roleManager.address, governor);
+    const deployment = await deployGaiaToken(
+      tokenName,
+      tokenSymbol,
+      this.roleManager.address,
+      governor
+    );
     this.gaia = deployment.token;
     this.gaiaResolver = deployment.resolver;
     this.resolver = await Resolver.new(this.roleManager.address);
@@ -162,7 +167,7 @@ contract('GaiaToken Upgrade Tests', ([
 
   describe('A copy of the BasicTest except for the burn tests and mint zero amount', () => {
     it('should NOT initialize twice', async function () {
-      await this.gaia.init(this.roleManager.address)
+      await this.gaia.init(tokenName, tokenSymbol, this.roleManager.address)
         .should.be.rejectedWith('Initializable: contract is already initialized');
     });
 

@@ -1,3 +1,4 @@
+import { ethers } from 'ethers';
 import { contractInstanceAt } from '@nomisma/nomisma-smart-contract-helpers';
 import { setupResolver } from './resolver';
 
@@ -17,10 +18,17 @@ export const deployRegistry = async (
     roleManager,
     governor
   );
+
+  const encodedArguments = ethers.utils.defaultAbiCoder.encode(
+    [ 'address', 'address' ],
+    [ gaiaToken, roleManager ]
+  );
+
   const regRouter = await RegistryRouter.new(
-    gaiaToken,
-    regResolver.address,
+    'init(address,address)',
+    encodedArguments,
     roleManager,
+    regResolver.address,
     { from: governor }
   );
 

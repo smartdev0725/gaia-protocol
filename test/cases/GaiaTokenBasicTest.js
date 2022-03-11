@@ -46,11 +46,16 @@ contract('GaiaToken Basic Tests', ([
       [ MINTER_ROLE, BURNER_ROLE ],
       { from: governor }
     );
-    this.gaia = (await deployGaiaToken(this.roleManager.address, governor)).token;
+    this.gaia = (await deployGaiaToken(
+      tokenName,
+      tokenSymbol,
+      this.roleManager.address,
+      governor
+    )).token;
   });
 
   it('should NOT initialize twice', async function () {
-    await this.gaia.init(this.roleManager.address)
+    await this.gaia.init(tokenName, tokenSymbol, this.roleManager.address)
       .should.be.rejectedWith('Initializable: contract is already initialized');
   });
 
@@ -62,6 +67,24 @@ contract('GaiaToken Basic Tests', ([
     assert.equal(nameFromSc, tokenName);
     assert.equal(symbolFromSc, tokenSymbol);
     assert.equal(totalSupply, '0');
+  });
+
+  it('should set custom token name and symbol', async function () {
+    const customTokenName = 'Custom Token';
+    const customTokenSymbol = 'CUST';
+
+    const customGaia = (await deployGaiaToken(
+      customTokenName,
+      customTokenSymbol,
+      this.roleManager.address,
+      governor
+    )).token;
+
+    const nameFromSc = await customGaia.name();
+    const symbolFromSc = await customGaia.symbol();
+
+    assert.equal(nameFromSc, customTokenName);
+    assert.equal(symbolFromSc, customTokenSymbol);
   });
 
   it('should NOT transfer before minting', async function () {

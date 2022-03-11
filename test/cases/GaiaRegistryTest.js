@@ -47,7 +47,12 @@ contract('GaiaRegistry Test', ([
 
   before(async function () {
     this.roleManager = await RoleManager.new([ governor ], '1');
-    this.gaia = (await deployGaiaToken(this.roleManager.address, governor)).token;
+    this.gaia = (await deployGaiaToken(
+      'Gaia Token',
+      'GAIA',
+      this.roleManager.address,
+      governor
+    )).token;
 
     this.registry = await deployRegistry(
       this.gaia.address,
