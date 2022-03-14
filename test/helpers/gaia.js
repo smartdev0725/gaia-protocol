@@ -1,4 +1,3 @@
-import { ethers } from 'ethers';
 import { contractInstanceAt, BigNumber } from '@nomisma/nomisma-smart-contract-helpers';
 import { setupResolver } from './resolver';
 
@@ -23,7 +22,7 @@ export const deployGaiaToken = async (
     governor
   );
 
-  const encodedArguments = ethers.utils.defaultAbiCoder.encode(
+  const encodedArguments = web3.eth.abi.encodeParameters(
     [ 'string', 'string', 'address' ],
     [ tokenName, tokenSymbol, roleManager ]
   );

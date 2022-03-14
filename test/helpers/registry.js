@@ -1,4 +1,3 @@
-import { ethers } from 'ethers';
 import { contractInstanceAt } from '@nomisma/nomisma-smart-contract-helpers';
 import { setupResolver } from './resolver';
 
@@ -19,7 +18,7 @@ export const deployRegistry = async (
     governor
   );
 
-  const encodedArguments = ethers.utils.defaultAbiCoder.encode(
+  const encodedArguments = web3.eth.abi.encodeParameters(
     [ 'address', 'address' ],
     [ gaiaToken, roleManager ]
   );

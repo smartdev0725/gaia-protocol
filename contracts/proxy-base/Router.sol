@@ -40,24 +40,25 @@ contract Router is RoleAware, Delegator {
     ) {
         initRouter(_resolver, _roleManager);
 
-        bytes4 initSelector = bytes4(
-            keccak256(
-                bytes(
-                    _initFunctionSignature
+        if (bytes(_initFunctionSignature).length > 0) {
+            bytes4 initSelector = bytes4(
+                keccak256(
+                    bytes(
+                        _initFunctionSignature
+                    )
                 )
-            )
-        );
+            );
 
-        address initializer = Resolver(_resolver).lookup(initSelector);
+            address initializer = Resolver(_resolver).lookup(initSelector);
 
-        bytes memory args = bytes.concat(initSelector, _encodedInitArguments);
+            bytes memory args = bytes.concat(initSelector, _encodedInitArguments);
 
-        delegate(
-            initializer,
-            args,
-            _errorMsg
-        );
-
+            delegate(
+                initializer,
+                args,
+                _errorMsg
+            );
+        }
     }
 
     /**

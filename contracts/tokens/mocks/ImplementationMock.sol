@@ -3,11 +3,12 @@ pragma solidity ^0.8.11;
 
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "../../access/RoleAware.sol";
+import "../../proxy-base/Resolvable.sol";
 import "../../utils/OnlyRouterAccess.sol";
 
-contract ImplementationMock is RoleAware, Initializable, OnlyRouterAccess {
+contract ImplementationMock is RoleAware, Resolvable, Initializable, OnlyRouterAccess {
 
-  string constant STRING_CONSTANT = "TEST_VALUE";
+  string public constant STRING_CONSTANT = "TEST_VALUE";
 
   struct MockStruct {
     address structAddress;
@@ -25,36 +26,35 @@ contract ImplementationMock is RoleAware, Initializable, OnlyRouterAccess {
   MockStruct public structVar;
   string public stringVar;
 
-  function init() external onlyRouter initializer {
+  function init1() external initializer {
     stringVar = STRING_CONSTANT;
   }
 
-  function init(address address_) external onlyRouter initializer {
+  function init2(address address_) external initializer {
     addressVar1 = address_;
   }
 
-  function init(address address_, uint256[] memory uintArray_) external onlyRouter initializer {
-    addressVar1 = address_;
-    uintArrayVar1 = uintArray_;
-  }
-
-  function init(uint256[] memory uintArray_, address address_) external onlyRouter initializer {
+  function init3(address address_, uint256[] memory uintArray_) external initializer {
     addressVar1 = address_;
     uintArrayVar1 = uintArray_;
   }
 
-  function init(
+  function init4(uint256[] memory uintArray_, address address_) external initializer {
+    addressVar1 = address_;
+    uintArrayVar1 = uintArray_;
+  }
+
+  function init5(
     uint256[] memory uintArray1_,
     uint16 uint1_,
     uint256[] memory uintArray2_,
     address address1_,
     uint256[] memory uintArray3_,
     uint16 uint2_,
-
     uint24 uint3_,
     MockStruct memory struct_,
     address address2_
-  ) external onlyRouter initializer {
+  ) external initializer {
     addressVar1 = address1_;
     addressVar2 = address2_;
     uintArrayVar1 = uintArray1_;
@@ -64,5 +64,9 @@ contract ImplementationMock is RoleAware, Initializable, OnlyRouterAccess {
     uintVar2 = uint2_;
     uintVar3 = uint3_;
     structVar = struct_;
+  }
+
+  function getStruct() external view returns(MockStruct memory) {
+    return structVar;
   }
 }
