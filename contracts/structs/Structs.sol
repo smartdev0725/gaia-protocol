@@ -6,11 +6,13 @@ interface Structs {
     struct CCBatch {
         string serialNumber;
         uint256 projectId;
+        string vintageStart;
         string vintageEnd;
         string creditType;
         uint256 quantity;
         string certificationsOrObjectives;
-        address initialGaiaOwner;
+        address tokenAddress;
+        address initialOwner;
         bool created;
     }
 

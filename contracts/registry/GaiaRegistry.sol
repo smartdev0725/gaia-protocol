@@ -16,32 +16,37 @@ contract GaiaRegistry is GaiaRegistryStorage, IGaiaRegistry {
         address _roleManager
     ) external override onlyRouter initializer {
         require(_gaiaToken != address(0), "GaiaRegistry: zero address passed as _gaiaToken");
-        gaiaToken = _gaiaToken;
+        gaiaTokens[_gaiaToken] = true;
         setRoleManager(_roleManager);
     }
 
     function generateBatch(
         string calldata serialNumber,
         uint256 projectId,
+        string calldata vintageStart,
         string calldata vintageEnd,
         string calldata creditType,
         uint256 quantity,
         string calldata certifications,
+        address tokenToMint,
         address mintTo
     ) external override onlyRole(CERTIFIER_ROLE) onlyRouter {
         require(!registeredBatches[serialNumber].created, "GaiaRegistry::generateBatch: Batch already created");
         require (
-            !_isTokenFraction(quantity),
+            !_isTokenFraction(quantity, IGaiaToken(tokenToMint).decimals()),
             "GaiaRegistry::generateBatch: quantity cannot be a fraction"
         );
+        require(gaiaTokens[tokenToMint], "GaiaRegistry::generateBatch: token to mint is not whitelisted");
 
         registeredBatches[serialNumber] = CCBatch(
             serialNumber,
             projectId,
+            vintageStart,
             vintageEnd,
             creditType,
             quantity,
             certifications,
+            tokenToMint,
             mintTo,
             true // created
         );
@@ -49,41 +54,47 @@ contract GaiaRegistry is GaiaRegistryStorage, IGaiaRegistry {
         emit BatchGenerated(
             serialNumber,
             projectId,
+            vintageStart,
             vintageEnd,
             creditType,
             quantity,
             certifications,
+            tokenToMint,
             mintTo,
             msg.sender // certifier
         );
 
         if (mintTo != address(0)) {
-            IGaiaToken(gaiaToken).mint(mintTo, quantity);
+            IGaiaToken(tokenToMint).mint(mintTo, quantity);
         }
     }
 
     function updateBatch(
         string calldata serialNumber,
         uint256 projectId,
+        string calldata vintageStart,
         string calldata vintageEnd,
         string calldata creditType,
         uint256 quantity,
         string calldata certifications,
+        address tokenToMint,
         address initialOwner
     ) external override onlyRole(CERTIFIER_ROLE) onlyRouter {
         require(registeredBatches[serialNumber].created, "GaiaRegistry::generateBatch: Batch has not been added yet");
         require (
-            !_isTokenFraction(quantity),
+            !_isTokenFraction(quantity, IGaiaToken(tokenToMint).decimals()),
             "GaiaRegistry::updateBatch: quantity cannot be a fraction"
         );
 
         registeredBatches[serialNumber] = CCBatch(
             serialNumber,
             projectId,
+            vintageStart,
             vintageEnd,
             creditType,
             quantity,
             certifications,
+            tokenToMint,
             initialOwner,
             true // created
         );
@@ -91,10 +102,12 @@ contract GaiaRegistry is GaiaRegistryStorage, IGaiaRegistry {
         emit BatchUpdated(
             serialNumber,
             projectId,
+            vintageStart,
             vintageEnd,
             creditType,
             quantity,
             certifications,
+            tokenToMint,
             initialOwner,
             msg.sender // certifier
         );
@@ -120,20 +133,21 @@ contract GaiaRegistry is GaiaRegistryStorage, IGaiaRegistry {
     }
 
     function retire(
+        address tokenToRetire,
         uint256 carbonTokenAmount
     ) external override onlyRouter {
         require (
-            !_isTokenFraction(carbonTokenAmount),
+            !_isTokenFraction(carbonTokenAmount, IGaiaToken(tokenToRetire).decimals()),
             "GaiaRegistry::retire: can retire only non-fractional amounts"
         );
 
-        IGaiaToken(gaiaToken).burn(msg.sender, carbonTokenAmount);
+        IGaiaToken(tokenToRetire).burn(msg.sender, carbonTokenAmount);
         unchecked {
-            retiredBalances[msg.sender] += carbonTokenAmount;
-            totalSupplyRetired += carbonTokenAmount;
+            totalSuppliesRetired[tokenToRetire] += carbonTokenAmount;
         }
 
         emit Retired(
+            tokenToRetire,
             msg.sender, // holder
             carbonTokenAmount
         );
@@ -146,7 +160,7 @@ contract GaiaRegistry is GaiaRegistryStorage, IGaiaRegistry {
         );
         require(IGaiaToken(_gaiaToken).totalSupply() >= 0, "GaiaRegistry::setGaiaToken: totalSupply is missing");
         require(IGaiaToken(_gaiaToken).decimals() > 0, "GaiaRegistry::setGaiaToken: decimals is missing");
-        gaiaToken = _gaiaToken;
+        gaiaTokens[_gaiaToken] = true;
     }
 
     function getRegisteredBatch(string calldata serialNumber) external view override onlyRouter returns (CCBatch memory) {
@@ -157,7 +171,7 @@ contract GaiaRegistry is GaiaRegistryStorage, IGaiaRegistry {
         return registeredProjects[id];
     }
 
-    function _isTokenFraction(uint256 amount) internal view virtual returns (bool) {
-        return amount % (10 ** IGaiaToken(gaiaToken).decimals()) != 0;
+    function _isTokenFraction(uint256 amount, uint256 decimals) internal view virtual returns (bool) {
+        return amount % (10 ** decimals) != 0;
     }
 }

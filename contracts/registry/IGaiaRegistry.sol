@@ -14,20 +14,24 @@ interface IGaiaRegistry is Structs {
     function generateBatch(
         string calldata serialNumber,
         uint256 projectId,
+        string calldata vintageStart,
         string calldata vintageEnd,
         string calldata creditType,
         uint256 quantity,
         string calldata certifications,
+        address tokenToMint,
         address mintTo
     ) external;
 
     function updateBatch(
         string calldata serialNumber,
         uint256 projectId,
+        string calldata vintageStart,
         string calldata vintageEnd,
         string calldata creditType,
         uint256 quantity,
         string calldata certifications,
+        address tokenToMint,
         address initialOwner
     ) external;
 
@@ -38,6 +42,7 @@ interface IGaiaRegistry is Structs {
     ) external;
 
     function retire(
+        address tokenToRetire,
         uint256 carbonTonAmt
     ) external;
 

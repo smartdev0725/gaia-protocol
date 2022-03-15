@@ -8,22 +8,26 @@ interface IGaiaRegistryStorage is Structs {
     event BatchGenerated(
         string serialNumber,
         uint256 projectId,
+        string vintageStart,
         string indexed vintageEnd,
         string indexed creditType,
         uint256 quantity,
         string certificationsOrObjectives,
-        address initialGaiaOwner,
+        address tokenToMint,
+        address initialOwner,
         address indexed certifier
     );
 
     event BatchUpdated(
         string serialNumber,
         uint256 projectId,
+        string vintageStart,
         string indexed vintageEnd,
         string indexed creditType,
         uint256 quantity,
         string certificationsOrObjectives,
-        address initialGaiaOwner,
+        address tokenToMint,
+        address initialOwner,
         address indexed certifier
     );
 
@@ -35,14 +39,13 @@ interface IGaiaRegistryStorage is Structs {
     );
 
     event Retired(
+        address indexed retiredToken,
         address indexed holder,
         uint256 amount
     );
 
     // storage getters
-    function gaiaToken() external view returns (address);
+    function gaiaTokens(address) external view returns (bool);
 
-    function totalSupplyRetired() external view returns (uint256);
-
-    function retiredBalances(address) external view returns (uint256);
+    function totalSuppliesRetired(address) external view returns (uint256);
 }
