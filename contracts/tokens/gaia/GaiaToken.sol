@@ -4,10 +4,16 @@ pragma solidity ^0.8.11;
 import "@openzeppelin/contracts-upgradeable/token/ERC20/ERC20Upgradeable.sol";
 import "./IGaiaToken.sol";
 import "../../access/RoleAware.sol";
+import "../../proxy-base/Resolvable.sol";
 import "../../utils/OnlyRouterAccess.sol";
 
 
-contract GaiaToken is RoleAware, ERC20Upgradeable, OnlyRouterAccess, IGaiaToken {
+contract GaiaToken is 
+    RoleAware, 
+    Resolvable, 
+    ERC20Upgradeable, 
+    OnlyRouterAccess, 
+    IGaiaToken {
 
     function init(
         string memory name, 
