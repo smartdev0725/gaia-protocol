@@ -21,24 +21,24 @@ contract GaiaRegistry is GaiaRegistryStorage, IGaiaRegistry {
     }
 
     function generateBatch(
-        string calldata serialNumber,
+        string memory serialNumber,
         uint256 projectId,
-        string calldata vintageStart,
-        string calldata vintageEnd,
+        uint256 vintageStart,
+        uint256 vintageEnd,
         string calldata creditType,
         uint256 quantity,
         string calldata certifications,
-        address tokenToMint,
-        address mintTo
+        address tokenAddress,
+        address initialOwner
     ) external override onlyRole(CERTIFIER_ROLE) onlyRouter {
         require(!registeredBatches[serialNumber].created, "GaiaRegistry::generateBatch: Batch already created");
         require (
-            !_isTokenFraction(quantity, IGaiaToken(tokenToMint).decimals()),
+            !_isTokenFraction(quantity, IGaiaToken(tokenAddress).decimals()),
             "GaiaRegistry::generateBatch: quantity cannot be a fraction"
         );
-        require(gaiaTokens[tokenToMint], "GaiaRegistry::generateBatch: token to mint is not whitelisted");
+        require(gaiaTokens[tokenAddress], "GaiaRegistry::generateBatch: token to mint is not whitelisted");
 
-        registeredBatches[serialNumber] = CCBatch(
+        _setBatchData(
             serialNumber,
             projectId,
             vintageStart,
@@ -46,9 +46,8 @@ contract GaiaRegistry is GaiaRegistryStorage, IGaiaRegistry {
             creditType,
             quantity,
             certifications,
-            tokenToMint,
-            mintTo,
-            true // created
+            tokenAddress,
+            initialOwner
         );
 
         emit BatchGenerated(
@@ -59,34 +58,34 @@ contract GaiaRegistry is GaiaRegistryStorage, IGaiaRegistry {
             creditType,
             quantity,
             certifications,
-            tokenToMint,
-            mintTo,
+            tokenAddress,
+            initialOwner,
             msg.sender // certifier
         );
 
-        if (mintTo != address(0)) {
-            IGaiaToken(tokenToMint).mint(mintTo, quantity);
+        if (initialOwner != address(0)) {
+            IGaiaToken(tokenAddress).mint(initialOwner, quantity);
         }
     }
 
     function updateBatch(
-        string calldata serialNumber,
+        string memory serialNumber,
         uint256 projectId,
-        string calldata vintageStart,
-        string calldata vintageEnd,
+        uint256 vintageStart,
+        uint256 vintageEnd,
         string calldata creditType,
         uint256 quantity,
         string calldata certifications,
-        address tokenToMint,
+        address tokenAddress,
         address initialOwner
     ) external override onlyRole(CERTIFIER_ROLE) onlyRouter {
         require(registeredBatches[serialNumber].created, "GaiaRegistry::generateBatch: Batch has not been added yet");
         require (
-            !_isTokenFraction(quantity, IGaiaToken(tokenToMint).decimals()),
+            !_isTokenFraction(quantity, IGaiaToken(tokenAddress).decimals()),
             "GaiaRegistry::updateBatch: quantity cannot be a fraction"
         );
 
-        registeredBatches[serialNumber] = CCBatch(
+        _setBatchData(
             serialNumber,
             projectId,
             vintageStart,
@@ -94,9 +93,8 @@ contract GaiaRegistry is GaiaRegistryStorage, IGaiaRegistry {
             creditType,
             quantity,
             certifications,
-            tokenToMint,
-            initialOwner,
-            true // created
+            tokenAddress,
+            initialOwner
         );
 
         emit BatchUpdated(
@@ -107,7 +105,7 @@ contract GaiaRegistry is GaiaRegistryStorage, IGaiaRegistry {
             creditType,
             quantity,
             certifications,
-            tokenToMint,
+            tokenAddress,
             initialOwner,
             msg.sender // certifier
         );
@@ -116,18 +114,24 @@ contract GaiaRegistry is GaiaRegistryStorage, IGaiaRegistry {
     function setProjectData(
         uint256 projectId,
         string calldata projectName,
-        string calldata projectType
+        string calldata projectCountry,
+        string calldata projectType,
+        string calldata projectMethodology
     ) external override onlyRole(CERTIFIER_ROLE) onlyRouter {
         registeredProjects[projectId] = CCProject(
             projectName,
+            projectCountry,
             projectType,
+            projectMethodology,
             true // created
         );
 
         emit ProjectDataSet(
             projectId,
             projectName,
+            projectCountry,
             projectType,
+            projectMethodology,
             msg.sender // certifier
         );
     }
@@ -173,5 +177,28 @@ contract GaiaRegistry is GaiaRegistryStorage, IGaiaRegistry {
 
     function _isTokenFraction(uint256 amount, uint256 decimals) internal view virtual returns (bool) {
         return amount % (10 ** decimals) != 0;
+    }
+
+    function _setBatchData(
+        string memory serialNumber,
+        uint256 projectId,
+        uint256 vintageStart,
+        uint256 vintageEnd,
+        string calldata creditType,
+        uint256 quantity,
+        string calldata certifications,
+        address tokenAddress,
+        address initialOwner
+    ) internal virtual {
+        registeredBatches[serialNumber].serialNumber = serialNumber;
+        registeredBatches[serialNumber].projectId = projectId;
+        registeredBatches[serialNumber].vintageStart = vintageStart;
+        registeredBatches[serialNumber].vintageEnd = vintageEnd;
+        registeredBatches[serialNumber].creditType = creditType;
+        registeredBatches[serialNumber].quantity = quantity;
+        registeredBatches[serialNumber].certificationsOrObjectives = certifications;
+        registeredBatches[serialNumber].tokenAddress = tokenAddress;
+        registeredBatches[serialNumber].initialOwner = initialOwner;
+        registeredBatches[serialNumber].created = true; // created
     }
 }

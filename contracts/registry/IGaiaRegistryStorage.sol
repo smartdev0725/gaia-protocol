@@ -8,8 +8,8 @@ interface IGaiaRegistryStorage is Structs {
     event BatchGenerated(
         string serialNumber,
         uint256 projectId,
-        string vintageStart,
-        string indexed vintageEnd,
+        uint256 vintageStart,
+        uint256 indexed vintageEnd,
         string indexed creditType,
         uint256 quantity,
         string certificationsOrObjectives,
@@ -21,8 +21,8 @@ interface IGaiaRegistryStorage is Structs {
     event BatchUpdated(
         string serialNumber,
         uint256 projectId,
-        string vintageStart,
-        string indexed vintageEnd,
+        uint256 vintageStart,
+        uint256 indexed vintageEnd,
         string indexed creditType,
         uint256 quantity,
         string certificationsOrObjectives,
@@ -34,8 +34,10 @@ interface IGaiaRegistryStorage is Structs {
     event ProjectDataSet(
         uint256 projectId,
         string projectName,
+        string indexed country,
         string indexed projectType,
-        address indexed certifier
+        string indexed methodology,
+        address certifier
     );
 
     event Retired(

@@ -32,7 +32,8 @@ contract('GaiaRegistry Test', ([
   const batchDataBase = {
     serialNumber: '1234567-D81FA-3772',
     projectId,
-    vintageEnd: '01-12-2019',
+    vintageStart: new BigNumber('1546322400'),
+    vintageEnd: new BigNumber('1575180000'),
     creditType: 'VCU',
     quantity: intToTokenDecimals(10000),
     certifications: '01: No Poverty; 02: Zero Hunger; 03: Good Health and Well-being;',
@@ -40,8 +41,10 @@ contract('GaiaRegistry Test', ([
 
   const projectDataBase = {
     projectId,
-    name: 'Southern Cardamom REDD+ Project',
+    projectName: 'Southern Cardamom REDD+ Project',
+    projectCountry: 'Cambodia',
     projectType: 'Agriculture Forestry and Other Land Use',
+    projectMethodology: 'VM0009',
   };
   const zeroAddress = '0x0000000000000000000000000000000000000000';
 
@@ -53,6 +56,8 @@ contract('GaiaRegistry Test', ([
       this.roleManager.address,
       governor
     )).token;
+
+    batchDataBase.tokenAddress = this.gaia.address;
 
     this.registry = await deployRegistry(
       this.gaia.address,
@@ -104,21 +109,25 @@ contract('GaiaRegistry Test', ([
       const {
         serialNumber: serialNumberSC,
         projectId: projectIdSC,
+        vintageStart: vintageStartSC,
         vintageEnd: vintageEndSC,
         creditType: cresitTypeSC,
         quantity: quantitySC,
         certificationsOrObjectives: certificationsOrObjectivesSC,
-        initialGaiaOwner: initialGaiaOwnerSC,
+        tokenAddress: tokenAddressSC,
+        initialOwner: initialOwnerSC,
         created,
       } = await this.registry.registeredBatches(newBatch.serialNumber);
 
       serialNumberSC.should.be.equal(newBatch.serialNumber);
       projectIdSC.should.be.bignumber.equal(newBatch.projectId);
-      vintageEndSC.should.be.equal(newBatch.vintageEnd);
+      vintageStartSC.should.be.bignumber.equal(newBatch.vintageStart);
+      vintageEndSC.should.be.bignumber.equal(newBatch.vintageEnd);
       cresitTypeSC.should.be.equal(newBatch.creditType);
       quantitySC.should.be.bignumber.equal(newBatch.quantity);
-      initialGaiaOwnerSC.should.be.equal(gaiaReceiver);
+      initialOwnerSC.should.be.equal(gaiaReceiver);
       certificationsOrObjectivesSC.should.be.equal(newBatch.certifications);
+      tokenAddressSC.should.be.equal(newBatch.tokenAddress);
       created.should.be.equal(true);
 
       const receiverBalAfter = await this.gaia.balanceOf(gaiaReceiver);
@@ -161,21 +170,25 @@ contract('GaiaRegistry Test', ([
       const {
         serialNumber: serialNumberSC,
         projectId: projectIdSC,
+        vintageStart: vintageStartSC,
         vintageEnd: vintageEndSC,
         creditType: cresitTypeSC,
         quantity: quantitySC,
         certificationsOrObjectives: certificationsOrObjectivesSC,
-        initialGaiaOwner: initialGaiaOwnerSC,
+        tokenAddress: tokenAddressSC,
+        initialOwner: initialOwnerSC,
         created,
       } = await this.registry.registeredBatches(newBatch.serialNumber);
 
       serialNumberSC.should.be.equal(newBatch.serialNumber);
       projectIdSC.should.be.bignumber.equal(newBatch.projectId);
-      vintageEndSC.should.be.equal(newBatch.vintageEnd);
+      vintageStartSC.should.be.bignumber.equal(newBatch.vintageStart);
+      vintageEndSC.should.be.bignumber.equal(newBatch.vintageEnd);
       cresitTypeSC.should.be.equal(newBatch.creditType);
       quantitySC.should.be.bignumber.equal(newBatch.quantity);
-      initialGaiaOwnerSC.should.be.equal(zeroAddress);
+      initialOwnerSC.should.be.equal(zeroAddress);
       certificationsOrObjectivesSC.should.be.equal(newBatch.certifications);
+      tokenAddressSC.should.be.equal(newBatch.tokenAddress);
       created.should.be.equal(true);
 
       const receiverBalAfter = await this.gaia.balanceOf(gaiaReceiver);
@@ -243,10 +256,10 @@ contract('GaiaRegistry Test', ([
 
       const offsetterBalanceBefore = await this.gaia.balanceOf(offsetter1);
 
-      await this.registry.retire(tokenAmtRetire1, { from: offsetter1 }).should.be.fulfilled;
+      await this.registry.retire(this.gaia.address, tokenAmtRetire1, { from: offsetter1 }).should.be.fulfilled;
 
       // for checking proper storage updates
-      await this.registry.retire(tokenAmtRetire2, { from: gaiaReceiver }).should.be.fulfilled;
+      await this.registry.retire(this.gaia.address, tokenAmtRetire2, { from: gaiaReceiver }).should.be.fulfilled;
 
       const offsetterBalanceAfter = await this.gaia.balanceOf(offsetter1);
 
@@ -278,17 +291,17 @@ contract('GaiaRegistry Test', ([
       const retireAmount = intToTokenDecimals(2);
       let balanceBefore = await this.registry.retiredBalances(gaiaReceiver);
 
-      await this.registry.retire(retireAmount, { from: gaiaReceiver }).should.be.fulfilled;
+      await this.registry.retire(this.gaia.address, retireAmount, { from: gaiaReceiver }).should.be.fulfilled;
       let balance = await this.registry.retiredBalances(gaiaReceiver);
       balance.should.be.bignumber.equal(balanceBefore.add(retireAmount));
 
       balanceBefore = balanceBefore.add(retireAmount);
-      await this.registry.retire(retireAmount, { from: gaiaReceiver }).should.be.fulfilled;
+      await this.registry.retire(this.gaia.address, retireAmount, { from: gaiaReceiver }).should.be.fulfilled;
       balance = await this.registry.retiredBalances(gaiaReceiver);
       balance.should.be.bignumber.equal(balanceBefore.add(retireAmount));
 
       balanceBefore = balanceBefore.add(retireAmount);
-      await this.registry.retire(retireAmount, { from: gaiaReceiver }).should.be.fulfilled;
+      await this.registry.retire(this.gaia.address, retireAmount, { from: gaiaReceiver }).should.be.fulfilled;
       balance = await this.registry.retiredBalances(gaiaReceiver);
       balance.should.be.bignumber.equal(balanceBefore.add(retireAmount));
     });
@@ -296,36 +309,42 @@ contract('GaiaRegistry Test', ([
     it('should revert if retiring a fraction amount', async function () {
       const retireAmount1 = new BigNumber('1000000000000000001');
       await this.registry.retire(
+        this.gaia.address,
         retireAmount1,
         { from: gaiaReceiver }
       ).should.be.rejectedWith('GaiaRegistry::retire: can retire only non-fractional amounts');
 
       const retireAmount2 = new BigNumber('8543210678021340564056392755329843758284656389');
       await this.registry.retire(
+        this.gaia.address,
         retireAmount2,
         { from: gaiaReceiver }
       ).should.be.rejectedWith('GaiaRegistry::retire: can retire only non-fractional amounts');
 
       const retireAmount3 = new BigNumber('999999999999999999');
       await this.registry.retire(
+        this.gaia.address,
         retireAmount3,
         { from: gaiaReceiver }
       ).should.be.rejectedWith('GaiaRegistry::retire: can retire only non-fractional amounts');
 
       const retireAmount4 = new BigNumber('42');
       await this.registry.retire(
+        this.gaia.address,
         retireAmount4,
         { from: gaiaReceiver }
       ).should.be.rejectedWith('GaiaRegistry::retire: can retire only non-fractional amounts');
 
       const retireAmount5 = new BigNumber('1234567890');
       await this.registry.retire(
+        this.gaia.address,
         retireAmount5,
         { from: gaiaReceiver }
       ).should.be.rejectedWith('GaiaRegistry::retire: can retire only non-fractional amounts');
 
       const retireAmount6 = new BigNumber('900000000000000000');
       await this.registry.retire(
+        this.gaia.address,
         retireAmount6,
         { from: gaiaReceiver }
       ).should.be.rejectedWith('GaiaRegistry::retire: can retire only non-fractional amounts');
@@ -346,18 +365,21 @@ contract('GaiaRegistry Test', ([
 
       const retireAmount1 = new BigNumber('1000000000000000000');
       await this.registry.retire(
+        this.gaia.address,
         retireAmount1,
         { from: gaiaReceiver }
       ).should.be.fulfilled;
 
       const retireAmount2 = new BigNumber('2000000000000000000');
       await this.registry.retire(
+        this.gaia.address,
         retireAmount2,
         { from: gaiaReceiver }
       ).should.be.fulfilled;
 
       const retireAmount3 = new BigNumber('2549857636392756320932746587328423000000000000000000');
       await this.registry.retire(
+        this.gaia.address,
         retireAmount3,
         { from: gaiaReceiver }
       ).should.be.fulfilled;
@@ -402,7 +424,9 @@ contract('GaiaRegistry Test', ([
       const projectData = {
         projectId: new BigNumber(1),
         projectName: 'test',
+        projectCountry: 'test',
         projectType: 'test',
+        projectMethodology: 'test',
       };
       await this.registry.setProjectData(
         ...Object.values(projectData),
@@ -414,7 +438,9 @@ contract('GaiaRegistry Test', ([
       const projectData = {
         projectId: new BigNumber(2),
         projectName: 'test',
+        projectCountry: 'test',
         projectType: 'test',
+        projectMethodology: 'test',
       };
       await this.registry.setProjectData(
         ...Object.values(projectData),
@@ -462,11 +488,13 @@ contract('GaiaRegistry Test', ([
       const batchGeneratedEvent = (await this.registry.getPastEvents('BatchGenerated')).at(-1).args;
       batchGeneratedEvent.serialNumber.should.be.equal(newBatch.serialNumber);
       batchGeneratedEvent.projectId.should.be.bignumber.equal(newBatch.projectId);
-      batchGeneratedEvent.vintageEnd.should.be.equal(sha3(newBatch.vintageEnd)); // indexed
+      batchGeneratedEvent.vintageStart.should.be.bignumber.equal(sha3(newBatch.vintageStart)); // indexed
+      batchGeneratedEvent.vintageEnd.should.be.bignumber.equal(sha3(newBatch.vintageEnd)); // indexed
       batchGeneratedEvent.creditType.should.be.equal(sha3(newBatch.creditType)); // indexed
       batchGeneratedEvent.quantity.should.be.bignumber.equal(newBatch.quantity);
       batchGeneratedEvent.certificationsOrObjectives.should.be.equal(newBatch.certifications);
-      batchGeneratedEvent.initialGaiaOwner.should.be.equal(gaiaReceiver);
+      batchGeneratedEvent.tokenAddress.should.be.equal(this.gaia.address);
+      batchGeneratedEvent.initialOwner.should.be.equal(gaiaReceiver);
       batchGeneratedEvent.certifier.should.be.equal(certifier1);
 
       const transferEvent = (await this.gaia.getPastEvents('Transfer')).at(-1).args;
@@ -479,7 +507,9 @@ contract('GaiaRegistry Test', ([
       const projectData = {
         projectId: new BigNumber(3),
         projectName: 'test project name',
+        projectCountry: 'test project country',
         projectType: 'test project type',
+        projectMethodology: 'test project methodology',
       };
       await this.registry.setProjectData(
         ...Object.values(projectData),
@@ -494,7 +524,7 @@ contract('GaiaRegistry Test', ([
 
     it('should find Transer (burn) and Retired events', async function () {
       const tokenAmount = intToTokenDecimals(123);
-      await this.registry.retire(tokenAmount, { from: gaiaReceiver }).should.be.fulfilled;
+      await this.registry.retire(this.gaia.address, tokenAmount, { from: gaiaReceiver }).should.be.fulfilled;
 
       const transferEvent = (await this.gaia.getPastEvents('Transfer')).at(-1).args;
       transferEvent.from.should.be.equal(gaiaReceiver);
@@ -523,11 +553,13 @@ contract('GaiaRegistry Test', ([
       const registeredBatch = await this.registry.getRegisteredBatch(newBatch.serialNumber);
       registeredBatch.serialNumber.should.be.equal(newBatch.serialNumber.toString());
       registeredBatch.projectId.should.be.equal(newBatch.projectId.toString());
-      registeredBatch.vintageEnd.should.be.equal(newBatch.vintageEnd);
+      registeredBatch.vintageStart.should.be.bignumber.equal(newBatch.vintageStart);
+      registeredBatch.vintageEnd.should.be.bignumber.equal(newBatch.vintageEnd);
       registeredBatch.creditType.should.be.equal(newBatch.creditType);
       registeredBatch.quantity.should.be.equal(newBatch.quantity.toString());
       registeredBatch.certificationsOrObjectives.should.be.equal(newBatch.certifications);
-      registeredBatch.initialGaiaOwner.should.be.equal(gaiaReceiver);
+      registeredBatch.tokenAddress.should.be.equal(this.gaia.address);
+      registeredBatch.initialOwner.should.be.equal(gaiaReceiver);
       registeredBatch.created.should.be.equal(true);
     });
 
@@ -567,12 +599,12 @@ contract('GaiaRegistry Test', ([
 
       const retiredAmountBefore = await this.registry.totalSupplyRetired();
       const retireAmount = intToTokenDecimals(10);
-      await this.registry.retire(retireAmount, { from: gaiaReceiver }).should.be.fulfilled;
+      await this.registry.retire(this.gaia.address, retireAmount, { from: gaiaReceiver }).should.be.fulfilled;
 
       let totalRetiredAmount = await this.registry.totalSupplyRetired();
       totalRetiredAmount.should.be.bignumber.equal(retiredAmountBefore.add(retireAmount));
 
-      await this.registry.retire(retireAmount, { from: gaiaReceiver }).should.be.fulfilled;
+      await this.registry.retire(this.gaia.address, retireAmount, { from: gaiaReceiver }).should.be.fulfilled;
       totalRetiredAmount = await this.registry.totalSupplyRetired();
       totalRetiredAmount.should.be.bignumber.equal(retiredAmountBefore.add(retireAmount).add(retireAmount));
     });
@@ -592,7 +624,7 @@ contract('GaiaRegistry Test', ([
 
       const balanceBefore = await this.registry.retiredBalances(gaiaReceiver);
       const retireAmount = intToTokenDecimals(12);
-      await this.registry.retire(retireAmount, { from: gaiaReceiver }).should.be.fulfilled;
+      await this.registry.retire(this.gaia.address, retireAmount, { from: gaiaReceiver }).should.be.fulfilled;
       const balance = await this.registry.retiredBalances(gaiaReceiver);
       balance.should.be.bignumber.equal(balanceBefore.add(retireAmount));
     });

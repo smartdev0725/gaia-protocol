@@ -12,10 +12,10 @@ interface IGaiaRegistry is Structs {
     ) external;
 
     function generateBatch(
-        string calldata serialNumber,
+        string memory serialNumber,
         uint256 projectId,
-        string calldata vintageStart,
-        string calldata vintageEnd,
+        uint256 vintageStart,
+        uint256 vintageEnd,
         string calldata creditType,
         uint256 quantity,
         string calldata certifications,
@@ -24,10 +24,10 @@ interface IGaiaRegistry is Structs {
     ) external;
 
     function updateBatch(
-        string calldata serialNumber,
+        string memory serialNumber,
         uint256 projectId,
-        string calldata vintageStart,
-        string calldata vintageEnd,
+        uint256 vintageStart,
+        uint256 vintageEnd,
         string calldata creditType,
         uint256 quantity,
         string calldata certifications,
@@ -37,8 +37,10 @@ interface IGaiaRegistry is Structs {
 
     function setProjectData(
         uint256 projectId,
-        string calldata name,
-        string calldata projectType
+        string calldata projectName,
+        string calldata projectCountry,
+        string calldata projectType,
+        string calldata projectMethodology
     ) external;
 
     function retire(
