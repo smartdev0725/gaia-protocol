@@ -7,15 +7,15 @@ import "../structs/Structs.sol";
 interface IGaiaRegistryStorage is Structs {
     event BatchGenerated(
         string serialNumber,
-        uint256 projectId,
+        uint256 indexed projectId,
         uint256 vintageStart,
         uint256 indexed vintageEnd,
         string indexed creditType,
         uint256 quantity,
         string certificationsOrObjectives,
-        address tokenToMint,
+        address tokenMinted,
         address initialOwner,
-        address indexed certifier
+        address certifier
     );
 
     event BatchUpdated(
@@ -26,7 +26,7 @@ interface IGaiaRegistryStorage is Structs {
         string indexed creditType,
         uint256 quantity,
         string certificationsOrObjectives,
-        address tokenToMint,
+        address tokenMinted,
         address initialOwner,
         address indexed certifier
     );
