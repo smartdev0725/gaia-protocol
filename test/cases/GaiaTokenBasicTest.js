@@ -220,7 +220,7 @@ contract('GaiaToken Basic Tests', ([
   it('should NOT spend tokens without approval', async function () {
     const amount = new BigNumber(10);
     await this.gaia.transferFrom(moneybag, client1, amount, { from: client2 })
-      .should.be.rejectedWith('ERC20: transfer amount exceeds allowance');
+      .should.be.rejectedWith('ERC20: insufficient allowance');
   });
 
   it('should spend approved tokens', async function () {
