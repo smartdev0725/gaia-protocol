@@ -18,5 +18,6 @@ contract GaiaRegistryRouter is Router {
         _roleManager,
         _resolver,
         "delegatecall() failed in GaiaRegistryRouter.constructor"
+    // solhint-disable-next-line no-empty-blocks
     ) { }
 }

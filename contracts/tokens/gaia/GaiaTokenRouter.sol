@@ -18,5 +18,6 @@ contract GaiaTokenRouter is Router {
         _roleManager,
         _resolver,
         "delegatecall() failed in GaiaTokenRouter.constructor"
+    // solhint-disable-next-line no-empty-blocks
     ) { }
 }
