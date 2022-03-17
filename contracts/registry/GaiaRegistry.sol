@@ -12,12 +12,10 @@ import "./GaiaRegistryStorage.sol";
 contract GaiaRegistry is GaiaRegistryStorage, IGaiaRegistry {
 
     function init(
-        address _gaiaToken,
-        address _roleManager
+        address _gaiaToken
     ) external override onlyRouter initializer {
         require(_gaiaToken != address(0), "GaiaRegistry: zero address passed as _gaiaToken");
         gaiaTokens[_gaiaToken] = true;
-        setRoleManager(_roleManager);
     }
 
     function generateBatch(

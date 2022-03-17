@@ -7,8 +7,7 @@ import "../structs/Structs.sol";
 interface IGaiaRegistry is Structs {
 
     function init(
-        address _gaiaToken,
-        address _roleManager
+        address _gaiaToken
     ) external;
 
     function generateBatch(

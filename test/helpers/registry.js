@@ -19,12 +19,12 @@ export const deployRegistry = async (
   );
 
   const encodedArguments = web3.eth.abi.encodeParameters(
-    [ 'address', 'address' ],
-    [ gaiaToken, roleManager ]
+    [ 'address' ],
+    [ gaiaToken ]
   );
 
   const regRouter = await RegistryRouter.new(
-    'init(address,address)',
+    'init(address)',
     encodedArguments,
     roleManager,
     regResolver.address,

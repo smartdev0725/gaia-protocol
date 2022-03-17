@@ -727,7 +727,7 @@ contract('GaiaRegistry Test', ([
   });
 
   it('should NOT initialize twice', async function () {
-    await this.registry.init(this.gaia.address, this.roleManager.address)
+    await this.registry.init(this.gaia.address)
       .should.be.rejectedWith('Initializable: contract is already initialized');
   });
 });
