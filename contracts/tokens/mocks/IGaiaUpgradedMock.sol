@@ -14,8 +14,7 @@ interface IGaiaUpgradedMock is IERC20Upgradeable, IERC20MetadataUpgradeable {
 
     function init(
         string memory name, 
-        string memory symbol,
-        address _roleManager
+        string memory symbol
     ) external;
 
     function mint(address to, uint256 amount) external;

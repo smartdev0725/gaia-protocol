@@ -9,19 +9,17 @@ import "../../utils/OnlyRouterAccess.sol";
 
 
 contract GaiaToken is 
-    RoleAware, 
-    Resolvable, 
-    ERC20Upgradeable, 
-    OnlyRouterAccess, 
+    RoleAware,
+    Resolvable,
+    ERC20Upgradeable,
+    OnlyRouterAccess,
     IGaiaToken {
 
     function init(
         string memory name,
-        string memory symbol,
-        address _roleManager // TODO deploy: remove this potentially! seems we are setting this twice!
+        string memory symbol
     ) external override onlyRouter initializer {
         super.__ERC20_init(name, symbol);
-        setRoleManager(_roleManager);
     }
 
     function mint(address to, uint256 amount) public override onlyRole(MINTER_ROLE) onlyRouter {

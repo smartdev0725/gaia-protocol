@@ -20,11 +20,9 @@ contract GaiaUpgradedMock is
 
     function init(
         string memory name, 
-        string memory symbol,
-        address _roleManager
+        string memory symbol
     ) external override onlyRouter initializer {
         super.__ERC20_init(name, symbol);
-        setRoleManager(_roleManager);
     }
 
     function mint(address to, uint256 amount) public override onlyRole(MINTER_ROLE) {

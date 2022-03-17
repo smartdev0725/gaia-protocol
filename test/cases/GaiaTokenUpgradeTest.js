@@ -167,7 +167,7 @@ contract('GaiaToken Upgrade Tests', ([
 
   describe('A copy of the BasicTest except for the burn tests and mint zero amount', () => {
     it('should NOT initialize twice', async function () {
-      await this.gaia.init(tokenName, tokenSymbol, this.roleManager.address)
+      await this.gaia.init(tokenName, tokenSymbol)
         .should.be.rejectedWith('Initializable: contract is already initialized');
     });
 
