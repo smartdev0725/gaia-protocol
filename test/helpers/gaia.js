@@ -22,13 +22,14 @@ export const deployGaiaToken = async (
     governor
   );
 
+  // TODO: need to get this dynamically through ABI!
   const encodedArguments = web3.eth.abi.encodeParameters(
     [ 'string', 'string', 'address' ],
     [ tokenName, tokenSymbol, roleManager ]
   );
 
   const gaiaRouter = await GaiaTokenRouter.new(
-    'init(string,string,address)',
+    'init(string,string,address)', // TODO: need to get this dynamically through ABI!
     encodedArguments,
     roleManager,
     gaiaResolver.address,
