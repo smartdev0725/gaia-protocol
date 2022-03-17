@@ -4,16 +4,22 @@ pragma solidity ^0.8.11;
 import "@openzeppelin/contracts-upgradeable/token/ERC20/ERC20Upgradeable.sol";
 import "./IGaiaToken.sol";
 import "../../access/RoleAware.sol";
+import "../../proxy-base/Resolvable.sol";
 import "../../utils/OnlyRouterAccess.sol";
 
 
-contract GaiaToken is RoleAware, ERC20Upgradeable, OnlyRouterAccess, IGaiaToken {
+contract GaiaToken is 
+    RoleAware,
+    Resolvable,
+    ERC20Upgradeable,
+    OnlyRouterAccess,
+    IGaiaToken {
 
     function init(
-        address _roleManager
+        string memory name,
+        string memory symbol
     ) external override onlyRouter initializer {
-        super.__ERC20_init("Gaia Token", "GAIA");
-        setRoleManager(_roleManager);
+        super.__ERC20_init(name, symbol);
     }
 
     function mint(address to, uint256 amount) public override onlyRole(MINTER_ROLE) onlyRouter {

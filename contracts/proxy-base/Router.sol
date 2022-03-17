@@ -4,7 +4,7 @@ pragma solidity ^0.8.11;
 
 import "./Resolver.sol";
 import "../access/RoleAware.sol";
-
+import "./Delegator.sol";
 
 /**
  * @title Router
@@ -20,8 +20,46 @@ import "../access/RoleAware.sol";
  * during `register()` process. {Router} functions can NOT be shadowed by any other
  * contracts!
  */
-contract Router is RoleAware {
+contract Router is RoleAware, Delegator {
     Resolver public resolver;
+
+    /**
+     * @param _initFunctionSignature implementation's initialization function signature. e.g. "init(address)"
+     * @param _encodedInitArguments encoded arguments that will be used during implementation initialization
+     * See https://docs.soliditylang.org/en/v0.8.11/abi-spec.html
+     * @param _roleManager address of {RoleManager} contract to be set for {Router}
+     * @param _resolver address of {Resolver} contract to be set for {Router}
+     * @param _errorMsg error message to revert in case of failed delegatecall execution
+     */
+    constructor (
+        string memory _initFunctionSignature,
+        bytes memory _encodedInitArguments,
+        address _roleManager,
+        address _resolver,
+        string memory _errorMsg
+    ) {
+        initRouter(_resolver, _roleManager);
+
+        if (bytes(_initFunctionSignature).length > 0) {
+            bytes4 initSelector = bytes4(
+                keccak256(
+                    bytes(
+                        _initFunctionSignature
+                    )
+                )
+            );
+
+            address initializer = Resolver(_resolver).lookup(initSelector);
+
+            bytes memory args = bytes.concat(initSelector, _encodedInitArguments);
+
+            delegate(
+                initializer,
+                args,
+                _errorMsg
+            );
+        }
+    }
 
     /**
      * @dev Default fallback functions that intercepts/accepts all calls. Method signature found

@@ -2,6 +2,7 @@ import {
   getChaiBN,
   BigNumber,
 } from '@nomisma/nomisma-smart-contract-helpers';
+import { assert } from 'chai';
 import { deployGaiaToken } from '../helpers/gaia';
 
 import {
@@ -46,22 +47,64 @@ contract('GaiaToken Basic Tests', ([
       [ MINTER_ROLE, BURNER_ROLE ],
       { from: governor }
     );
-    this.gaia = (await deployGaiaToken(this.roleManager.address, governor)).token;
+    const deployment = await deployGaiaToken(
+      tokenName,
+      tokenSymbol,
+      this.roleManager.address,
+      governor
+    );
+    this.gaia = deployment.token;
+    this.gaiaResolver = deployment.resolver;
   });
 
   it('should NOT initialize twice', async function () {
-    await this.gaia.init(this.roleManager.address)
+    await this.gaia.init(tokenName, tokenSymbol)
       .should.be.rejectedWith('Initializable: contract is already initialized');
   });
 
   it('should set initial storage correctly', async function () {
+    const storedRoleManager = await web3.eth.getStorageAt(this.gaia.address, 0);
+    const storedResolver = await web3.eth.getStorageAt(this.gaia.address, 1);
+
     const nameFromSc = await this.gaia.name();
     const symbolFromSc = await this.gaia.symbol();
     const totalSupply = await this.gaia.totalSupply();
 
+    assert.equal(
+      storedRoleManager.toLowerCase(),
+      web3.utils.padLeft(this.roleManager.address, 64).toLowerCase(),
+      'role manager address in storage does not match'
+    );
+    assert.equal(
+      storedResolver.toLowerCase(),
+      web3.utils.padLeft(
+        // first prepends initialized bool to same slot since variables are packed
+        web3.utils.padLeft(this.gaiaResolver.address, 41, '1'),
+        64
+      ).toLowerCase(),
+      'resolver address or initialization vars in storage does not match'
+    );
     assert.equal(nameFromSc, tokenName);
     assert.equal(symbolFromSc, tokenSymbol);
     assert.equal(totalSupply, '0');
+  });
+
+  it('should set custom token name and symbol', async function () {
+    const customTokenName = 'Custom Token';
+    const customTokenSymbol = 'CUST';
+
+    const customGaia = (await deployGaiaToken(
+      customTokenName,
+      customTokenSymbol,
+      this.roleManager.address,
+      governor
+    )).token;
+
+    const nameFromSc = await customGaia.name();
+    const symbolFromSc = await customGaia.symbol();
+
+    assert.equal(nameFromSc, customTokenName);
+    assert.equal(symbolFromSc, customTokenSymbol);
   });
 
   it('should NOT transfer before minting', async function () {
@@ -177,7 +220,7 @@ contract('GaiaToken Basic Tests', ([
   it('should NOT spend tokens without approval', async function () {
     const amount = new BigNumber(10);
     await this.gaia.transferFrom(moneybag, client1, amount, { from: client2 })
-      .should.be.rejectedWith('ERC20: transfer amount exceeds allowance');
+      .should.be.rejectedWith('ERC20: insufficient allowance');
   });
 
   it('should spend approved tokens', async function () {

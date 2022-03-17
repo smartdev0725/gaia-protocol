@@ -53,7 +53,12 @@ contract('GaiaToken Upgrade Tests', ([
       [ MINTER_ROLE, BURNER_ROLE, MOCK_ROLE ],
       { from: governor }
     );
-    const deployment = await deployGaiaToken(this.roleManager.address, governor);
+    const deployment = await deployGaiaToken(
+      tokenName,
+      tokenSymbol,
+      this.roleManager.address,
+      governor
+    );
     this.gaia = deployment.token;
     this.gaiaResolver = deployment.resolver;
     this.resolver = await Resolver.new(this.roleManager.address);
@@ -162,7 +167,7 @@ contract('GaiaToken Upgrade Tests', ([
 
   describe('A copy of the BasicTest except for the burn tests and mint zero amount', () => {
     it('should NOT initialize twice', async function () {
-      await this.gaia.init(this.roleManager.address)
+      await this.gaia.init(tokenName, tokenSymbol)
         .should.be.rejectedWith('Initializable: contract is already initialized');
     });
 
@@ -244,7 +249,7 @@ contract('GaiaToken Upgrade Tests', ([
     it('should NOT spend tokens without approval', async function () {
       const amount = new BigNumber(10);
       await this.gaia.transferFrom(moneybag, client1, amount, { from: client2 })
-        .should.be.rejectedWith('ERC20: transfer amount exceeds allowance');
+        .should.be.rejectedWith('ERC20: insufficient allowance');
     });
 
     it('should spend approved tokens', async function () {

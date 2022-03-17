@@ -6,17 +6,21 @@ interface Structs {
     struct CCBatch {
         string serialNumber;
         uint256 projectId;
-        string vintageEnd;
+        uint256 vintageStart;
+        uint256 vintageEnd;
         string creditType;
         uint256 quantity;
         string certificationsOrObjectives;
-        address initialGaiaOwner;
+        address tokenAddress;
+        address initialOwner;
         bool created;
     }
 
     struct CCProject {
         string projectName;
+        string projectCountry;
         string projectType;
+        string projectMethodology;
         bool created;
     }
 }

@@ -5,17 +5,24 @@ import "@openzeppelin/contracts-upgradeable/token/ERC20/ERC20Upgradeable.sol";
 import "./IGaiaUpgradedMock.sol";
 import "../../access/RoleAware.sol";
 import "../../utils/OnlyRouterAccess.sol";
+import "../../proxy-base/Resolvable.sol";
 
 
-contract GaiaUpgradedMock is RoleAware, ERC20Upgradeable, OnlyRouterAccess, IGaiaUpgradedMock {
+contract GaiaUpgradedMock is 
+    RoleAware, 
+    Resolvable,
+    ERC20Upgradeable, 
+    OnlyRouterAccess, 
+    IGaiaUpgradedMock {
+
     bytes32 public constant MOCK_ROLE = "MOCK_ROLE";
     uint256 public override version;
 
     function init(
-        address _roleManager
+        string memory name, 
+        string memory symbol
     ) external override onlyRouter initializer {
-        super.__ERC20_init("Gaia Token", "GAIA");
-        setRoleManager(_roleManager);
+        super.__ERC20_init(name, symbol);
     }
 
     function mint(address to, uint256 amount) public override onlyRole(MINTER_ROLE) {

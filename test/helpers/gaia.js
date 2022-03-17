@@ -10,6 +10,8 @@ const GaiaUpgradedMock = artifacts.require('./GaiaUpgradedMock.sol');
 const IGaiaUpgradedMock = artifacts.require('./IGaiaUpgradedMock.sol');
 
 export const deployGaiaToken = async (
+  tokenName,
+  tokenSymbol,
   roleManager,
   governor
 ) => {
@@ -20,7 +22,14 @@ export const deployGaiaToken = async (
     governor
   );
 
+  const encodedArguments = web3.eth.abi.encodeParameters(
+    [ 'string', 'string' ], // TODO: need to get this dynamically through ABI!
+    [ tokenName, tokenSymbol ]
+  );
+
   const gaiaRouter = await GaiaTokenRouter.new(
+    'init(string,string)', // TODO: need to get this dynamically through ABI!
+    encodedArguments,
     roleManager,
     gaiaResolver.address,
     { from: governor }

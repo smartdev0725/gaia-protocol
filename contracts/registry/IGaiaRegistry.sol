@@ -7,37 +7,43 @@ import "../structs/Structs.sol";
 interface IGaiaRegistry is Structs {
 
     function init(
-        address _gaiaToken,
-        address _roleManager
+        address _gaiaToken
     ) external;
 
     function generateBatch(
-        string calldata serialNumber,
+        string memory serialNumber,
         uint256 projectId,
-        string calldata vintageEnd,
+        uint256 vintageStart,
+        uint256 vintageEnd,
         string calldata creditType,
         uint256 quantity,
         string calldata certifications,
+        address tokenToMint,
         address mintTo
     ) external;
 
     function updateBatch(
-        string calldata serialNumber,
+        string memory serialNumber,
         uint256 projectId,
-        string calldata vintageEnd,
+        uint256 vintageStart,
+        uint256 vintageEnd,
         string calldata creditType,
         uint256 quantity,
         string calldata certifications,
+        address tokenToMint,
         address initialOwner
     ) external;
 
     function setProjectData(
         uint256 projectId,
-        string calldata name,
-        string calldata projectType
+        string calldata projectName,
+        string calldata projectCountry,
+        string calldata projectType,
+        string calldata projectMethodology
     ) external;
 
     function retire(
+        address tokenToRetire,
         uint256 carbonTonAmt
     ) external;
 

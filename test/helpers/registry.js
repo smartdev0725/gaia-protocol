@@ -17,10 +17,17 @@ export const deployRegistry = async (
     roleManager,
     governor
   );
+
+  const encodedArguments = web3.eth.abi.encodeParameters(
+    [ 'address' ],
+    [ gaiaToken ]
+  );
+
   const regRouter = await RegistryRouter.new(
-    gaiaToken,
-    regResolver.address,
+    'init(address)',
+    encodedArguments,
     roleManager,
+    regResolver.address,
     { from: governor }
   );
 

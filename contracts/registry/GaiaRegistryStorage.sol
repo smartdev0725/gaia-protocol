@@ -15,10 +15,9 @@ contract GaiaRegistryStorage is
     OnlyRouterAccess,
     IGaiaRegistryStorage {
 
-    address public override gaiaToken;
+    mapping(address => bool) public override gaiaTokens;
 
     mapping(string => CCBatch) public registeredBatches;
     mapping(uint256 => CCProject) public registeredProjects;
-    mapping(address => uint256) public override retiredBalances;
-    uint256 public override totalSupplyRetired;
+    mapping(address => uint256) public override totalSuppliesRetired;
 }
